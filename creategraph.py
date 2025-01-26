@@ -4,11 +4,13 @@ import networkx as nx
 import pickle
 
 
+#update file names & add to folder
 edgeWeightFile = ""
 mainFile = ""
 
 weightData = pd.read_csv(edgeWeightFile)
 nodeData = pd.read_csv(mainFile)
+
 locations = {}
 
 graph1 = nx.MultiGraph()
@@ -16,23 +18,25 @@ graph2 = nx.Graph()
 
 for i in range(len(weightData)):
     geoCode = weightData[i][0]
-    lattitude = weightData[i][37]#guessing
+    lattitude = weightData[i][37] #may have counted wrong
     longitude = weightData[i][38]
     if geoCode not in locations:
         locations[geoCode] = [lattitude, longitude]
 
-    
+
 for i in range(len(nodeData)):
     sourceNode = nodeData[i][0]
     destNode = nodeData[i][1]
     asq = (abs(locations[sourceNode][0]- locations[destNode][0]))**2
     bsq = (abs(locations[sourceNode][1]- locations[destNode][1]))**2
-    c = math.sqrt(asq+bsq) #edge weight
+    c = math.sqrt(asq+bsq) #edge weight found using pythagorean theorem to calculate distance
     graph1.add_edge(sourceNode, destNode, c)
 
 
 tripCount = {}
-#write code to calculate edge weights based on # of trips
+
+
+#edge weight based on number of trips
 for i in range(len(nodeData)):
     sourceNode = int(nodeData[i][0])
     destNode = int(nodeData[i][1])
@@ -53,6 +57,7 @@ for i in range(len(tripCount)):
     graph2.add_edge(source,dest, tripCount[i])
 
 
+#save graphs as files
 with open('graph1.pkl', 'wb') as f:
     pickle.dump(graph1, f)
 
