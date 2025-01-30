@@ -1,10 +1,13 @@
 import pandas as pd
-import math
 import networkx as nx
-import matplotlib.pyplot as plt
-import matplotlib
 
+#must be in this order i think
+import matplotlib
 matplotlib.use('Qt5Agg')
+import matplotlib.pyplot as plt
+
+
+
 
 #constructing a dictionary that leads each geocode to its census tract
 node_data_file = "mn_xwalk.csv"
