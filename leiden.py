@@ -11,13 +11,13 @@ class Leiden:
         self.communities = []
 
 
+    def setFirstCommunities(self, graph: nx.Graph) -> None:                                 # Sets all nodes as their own communities during first step in Leiden
+        allNodes = graph.nodes
+        for node in allNodes:
+            newCommunity = [node]
+            self.communities.append(newCommunity)
 
-
-    def setCommunities(self, graph: nx.Graph) -> None:
-        # Sets all nodes as their own communities during first step in Leiden
-        self.communities.append()#for loop going through all communities
-
-    def modularity(self, node, community: List, graph: nx.Graph) ->float:
+    def modularity(self, node, community: List, graph: nx.Graph) ->float:                   # Calculates modularity of node and community
 
         if len(community) < 1:                                                              # If nothing in community, then this shouldn't increase modularity - so return worst possible value
             return -1
