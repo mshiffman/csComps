@@ -1,3 +1,6 @@
+# Leiden algorithm implementation for Carleton College Computer Science 2025 Comps
+# Contributors: Jonathan Merchant, Mika Shiffman, Graham Gordon
+
 import networkx as nx
 import random
 from collections import deque
@@ -100,6 +103,58 @@ class Leiden:
                 refinedCommunities.append(subcommunity)
         
         return refinedCommunities, graph
+
+    def agglomerateCommunities(self, communities: list, graph: nx.Graph) -> nx.Graph:
+        # Agglomeration step of Leiden algorithm
+
+        # Creates new agglomerated graph
+        aggGraph = nx.Graph()
+
+        for community in communities:
+            # Creates nodes from communities to add to graph
+            community.pop(0)    # Removes mod val
+            communityNode = tuple(community)
+            aggGraph.add_node(communityNode)
+
+        # Set to keep track of edges added to graph
+        completedEdge = set()
+        
+        for community in communities:
+
+            for node in community:
+                # Finds neighbors of a node in a community
+                nodeNeighbors = list(graph.neighbors(node))
+
+                for neighbor in nodeNeighbors:
+                    # Finds the communities of a neighbor
+                    neighborCommunity = self.getCommunity(neighbor, communities)
+
+                    if community != neighborCommunity:
+                        # If the community of provided node and its neighbor are not
+                        # the same community, an edge must span between communities,
+                        # and thus and edge must span between agglomerated nodes
+                        communityNode = tuple(community)
+                        neighborNode = tuple(neighborCommunity)
+
+                        checkEdge = tuple(sorted([node, neighbor]))
+                        # Makes sure edge hasn't already been added before
+                        if checkEdge not in completedEdge:
+
+                            # Finds the edge weight of the given node and its neighbor
+                            edge_weight = graph[node][neighbor]["weight"]
+
+                            if aggGraph.has_edge(communityNode, neighborNode):
+                                # If there already is an edge between agglomerated nodes,
+                                # increases that edge weight with the newly found edge weight
+                                aggGraph[communityNode][neighborNode]["weight"] += edge_weight
+                            else:
+                                # If there is no edge present, then a new one with the newly
+                                # found edge weight is created
+                                aggGraph.add_edge(communityNode, neighborNode, weight=edge_weight)
+                            
+                            completedEdge.add(checkEdge)
+        
+        return aggGraph
 
     def modularity(self, node, community: list, graph: nx.Graph) -> float:
         # Calculates modularity of node and community
@@ -224,54 +279,46 @@ class Leiden:
 
         return neighborsToChange
 
+    def getCommunity(self, node, communities: list) -> list:
+        # Gets the community of a specific node
+        for community in communities:
+            if node in community:
+                return community
+
     def runLeiden(self):
         # Runs leiden in correct implementation order
-        # firstCommunities = self.setFirstCommunities()
+
         localmovementCommunities, localmovementGraph = self.moveNodesFast(self.graph)
         print(f"local node movement communities: {localmovementCommunities}")
         refinedCommunities, refinedGraph = self.refineCommunities(localmovementCommunities, localmovementGraph)
         print(f"refined communities: {refinedCommunities}")
+        agglomeratedGraph = self.agglomerateCommunities(refinedCommunities, refinedGraph)
+        print(f"Agglomerated graph {agglomeratedGraph}. Nodes: {agglomeratedGraph.nodes}. Edges:")
+        edges_with_weights = agglomeratedGraph.edges(data=True)
+        for u, v, data in edges_with_weights:
+            print(f"Edge: ({u}, {v}), Weight: {data['weight']}")
 
 
 def creategraph() -> nx.Graph:
     # Creates NetworkX graph to test
     G = nx.Graph()
-    # G.add_edge(0, 1, weight=4)
-    # G.add_edge(0, 2, weight=1)
-    # G.add_edge(1, 2, weight=1)
-    # G.add_edge(1, 3, weight=1)
-    # G.add_edge(2, 3, weight=2)
-    # G.add_edge(2, 4, weight=4)
-    # G.add_edge(3, 4, weight=2)
+    G.add_edge(0, 1, weight=4)
+    G.add_edge(0, 2, weight=1)
+    G.add_edge(1, 2, weight=1)
+    G.add_edge(1, 3, weight=1)
+    G.add_edge(2, 3, weight=2)
+    G.add_edge(2, 4, weight=4)
+    G.add_edge(3, 4, weight=2)
 
-    G.add_edge(0, 1, weight=0.6)
-    G.add_edge(0, 2, weight=0.2)
-    G.add_edge(2, 3, weight=0.1)
-    G.add_edge(2, 4, weight=0.7)
-    G.add_edge(2, 5, weight=0.9)
-    G.add_edge(0, 3, weight=0.3)
+    # G.add_edge(0, 1, weight=0.6)
+    # G.add_edge(0, 2, weight=0.2)
+    # G.add_edge(2, 3, weight=0.1)
+    # G.add_edge(2, 4, weight=0.7)
+    # G.add_edge(2, 5, weight=0.9)
+    # G.add_edge(0, 3, weight=0.3)
 
     return G
 
-
-# def drawgraph(G: nx.Graph) -> None:
-#     # Draws graph using NetworkX
-#     #
-#     # Positions for all nodes - seed for reproducibility
-#     pos = nx.spring_layout(G, seed=7)
-
-#     nx.draw(G, pos)
-
-#     nx.draw_networkx_labels(G, pos, font_size=20, font_family="sans-serif")
-
-#     edge_labels = nx.get_edge_attributes(G, "weight")
-#     nx.draw_networkx_edge_labels(G, pos, edge_labels)
-
-#     ax = plt.gca()
-#     ax.margins(0.08)
-#     plt.axis("off")
-#     plt.tight_layout()
-#     plt.show()
 
 def main():
     leidenGraph = Leiden(creategraph())
