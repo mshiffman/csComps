@@ -25,4 +25,11 @@ def testModNoCommunity():
     nxG.add_edges_from([("a", "b"), ("b", "c"), ("d", "e"), ("e", "f")])  
     communities = [[], []]
     classG = Leiden(nxG)
-    assert classG.modularity("a", communities[0], nxG) == 0 
+    assert classG.modularity("a", communities[0], nxG) > 0
+
+def testModEmptyGraph():
+    nxG = nx.Graph()
+    nxG.add_edges_from([])  
+    communities = [[]]
+    classG = Leiden(nxG)
+    assert classG.modularity("a", communities[0], nxG) == 0
