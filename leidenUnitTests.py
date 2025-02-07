@@ -20,9 +20,9 @@ def testModNoNode():
     with pytest.raises(ValueError):
         classG.modularity("g", communities[0], nxG) 
 
-def testModEmpty():
+def testModNoCommunity():
     nxG = nx.Graph()
     nxG.add_edges_from([("a", "b"), ("b", "c"), ("d", "e"), ("e", "f")])  
-    communities = [["a", "b", "c"], ["d","e", "f"]]
+    communities = [[], []]
     classG = Leiden(nxG)
     assert classG.modularity("a", communities[0], nxG) == 0 
