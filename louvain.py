@@ -5,28 +5,46 @@ class Louvain:
     def __init__(self):
         self.G = nx.Graph()
         self.communities = []
+        self.nodeMapping = {}
 
-    def run(self, G: nx.Graph):
+    def run(self):
 
-        #placing each node in its own community to begin
-        for node in G.nodes:
-            node_as_list = [node]
-            self.communities.append(node_as_list)
+        self.singletonCommunities()
         
         #running phase 1 until modularity reaches a local maxima
         changesMade = True
         while changesMade:
             changesMade = False
-            for node in G.nodes:
+            for node in self.G.nodes:
                 if self.nodeMovement(node) == True:
                     changesMade = True
         
         #creating new graph
         newGraph = nx.Graph()
-
-                    
-
+        for i in range(len(self.communities)):
+            newGraph.add_node(i)
         
+        #creating new nodes and edges
+        for i in self.G.nodes:
+            for j in self.G.nodes:
+                if self.G.has_edge(i,j):
+                    comm_iIndex = self.findCommunity(i)
+                    comm_jIndex = self.findCommunity(j)
+                    if newGraph.has_edge(comm_iIndex,comm_jIndex):
+                        newGraph.edges[comm_iIndex][comm_jIndex]['weight'] += self.G[i][j]['weight']
+                    else:
+                        newGraph.add_edge(comm_iIndex,comm_jIndex, weight=self.G[i][j]['weight'])
+        
+        self.singletonCommunities()
+        
+
+
+
+    def singletonCommunities(self):
+        self.communities = []
+        for node in self.G.nodes:
+            node_as_list = [node]
+            self.communities.append(node_as_list)
 
 
     def nodeToCommunity(self, node, destNode):
@@ -35,19 +53,20 @@ class Louvain:
                 comm.remove(node)
             if destNode in comm:
                 comm.append(node)
+                self.nodeMapping[node] = comm
         
         
 
     def nodeMovement(self, node):
         nodeMoved = False
         curMod = self.modularity()
-        bestCommunity = self.findCommunity(node)
+        bestIndex = self.findCommunity(node)
         for neighbor in nx.neighbors(self.G, node):
             self.nodeToCommunity(node,neighbor)
             if self.modularity() > curMod:
                 nodeMoved = True
-                bestCommunity = self.findCommunity(j)
-        self.nodeToCommunity(bestCommunity)
+                bestIndex = self.findCommunity(neighbor)
+        self.nodeToCommunity(self.communities[bestIndex])
         return nodeMoved
                     
 
@@ -83,9 +102,9 @@ class Louvain:
         return total
 
     def findCommunity(self, node):
-        for c in self.communities:
-            if node in c:
-                return c
+        for c_index in range(len(self.communities)):
+            if node in self.communities(c_index):
+                return c_index
         print("Error: node",node,"is not part of a community.")
 
     def delta(self,node_i, node_j):
@@ -104,8 +123,10 @@ def main():
     G.add_edge("A", "C", weight=3)
     G.add_edge("B", "C", weight=2)
     G.add_edge("C", "D", weight=4)
+    G.add_edge("A","A", weight = 2)
+    G.edges["C", "D"]['weight'] += 6
 
-    print(G.get_edge_data("A", "B")["weight"])
+    print(G.get_edge_data("A", "A")["weight"])
     
 
 if __name__ == "__main__":
