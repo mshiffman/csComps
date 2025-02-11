@@ -11,8 +11,6 @@ class Leiden:
     def __init__(self, graph: nx.Graph):
 
         self.graph = graph
-        # self.communities = []
-        # self.allNodes = list(graph.nodes)
 
     def setInitialorRefinedCommunities(self, inputCommunity: list = None, graph: nx.Graph = None) -> list:
         # Sets communities with a graph during the initial step
@@ -23,14 +21,14 @@ class Leiden:
         if inputCommunity:
             # Used to set communities during refinement step
             for node in inputCommunity:
-                newCommunity = [0.0, node]
+                newCommunity = [node]
                 outputCommunities.append(newCommunity)
             return outputCommunities
         else:
             # Used to set communities during fast local node movement step
             allNodes = list(graph.nodes)
             for node in allNodes:
-                newCommunity = [0.0, node]
+                newCommunity = [node]
                 outputCommunities.append(newCommunity)
         return outputCommunities
 
@@ -44,6 +42,10 @@ class Leiden:
             # Get communities if in refinement step
             communities = self.setInitialorRefinedCommunities(communityToRefine, graph)
 
+        if len(communities) == 1:
+            # If only one community inputted, then that should be final set of communities
+            return communities, graph
+
         # Get random order of node movement
         nodeOrderQueue = self.setRandQueue(communities)
 
@@ -54,30 +56,32 @@ class Leiden:
             # Gets first node to move
             curr_node = nodeOrderQueue.popleft()
 
-            # Sets top modularity to 0 to be compared
-            currTopMod = 0
+            # Sets test communities for node movement
+            testCommunities = communities
 
-            # Gets modularity of current community
-            curr_ModCommunity = self.getMod(curr_node, None, communities)
+            # Gets current graph modularity
+            currTopMod = self.modularity(graph, communities)
 
             # Examines every possible community
             for community in communities:
-                eval_ModCommunity = self.getMod(0, community, communities)
+
+                # Sets test community for node movement
+                testCommunity = community
 
                 # Skip if community has current node in it
-                # Don't want to slice community list as it's used later
-                checkCommunity = community
-                if curr_node in checkCommunity[1:]:
+                if curr_node in community:
                     continue
                 else:
-                    # Get modularity of first node in examined community
-                    modVal = self.modularity(curr_node, community, graph)
+                    # Adds node to test communities
+                    checkCommunities = self.addNodeToCommunity(curr_node, testCommunity, testCommunities)
+
+                    # Examines modularity of test communities
+                    modVal = self.modularity(graph, checkCommunities)
 
                     # If modularity is increased, track mod and community
-                    if modVal > (curr_ModCommunity + eval_ModCommunity):
-                        if modVal > currTopMod:
-                            currTopMod = modVal
-                            idealCommunity = community
+                    if modVal > currTopMod:
+                        currTopMod = modVal
+                        idealCommunity = community
 
             if not idealCommunity:
                 # If modularity isn't increased in any community,
@@ -85,14 +89,12 @@ class Leiden:
                 continue
             else:
                 # If modularity is increased, add node to new community
-                communities = self.addNodeToCommunity(curr_node, currTopMod, idealCommunity, communities)
+                communities = self.addNodeToCommunity(curr_node, idealCommunity, communities)
 
                 # If any neighbors of node aren't in same community
                 # or already in the queue, then add to back of queue
-                changeNeighbors = self.getChangedNeighbors(curr_node,
-                                                           idealCommunity,
-                                                           nodeOrderQueue,
-                                                           graph,
+                changeNeighbors = self.getChangedNeighbors(curr_node, idealCommunity,
+                                                           nodeOrderQueue, graph,
                                                            communities)
                 nodeOrderQueue.extend(changeNeighbors)
 
@@ -102,7 +104,7 @@ class Leiden:
         # Community Refinement step of Leiden algorithm
         refinedCommunities = []
         for community in communities:
-            newRefCommunity, g = self.moveNodesFast(graph, community[1:])
+            newRefCommunity, g = self.moveNodesFast(graph, community)
             for subcommunity in newRefCommunity:
                 refinedCommunities.append(subcommunity)
 
@@ -123,8 +125,7 @@ class Leiden:
             # to new communities based on communities found in the
             # fast local movement step
 
-            community.pop(0)
-            subCommunity = [0.0]
+            subCommunity = []
 
             for node in community:
 
@@ -134,9 +135,6 @@ class Leiden:
 
                 # Find refined community of node
                 findRefComm = self.getCommunity(node, refinedCommunities)
-
-                # Pop to get rid of mod value
-                findRefComm.pop(0)
 
                 # Create new node and add to graph, append to new community
                 newNode = tuple(findRefComm)
@@ -191,79 +189,51 @@ class Leiden:
 
         return newCommunities, aggGraph
 
-    def modularity(self, node, community: list, graph: nx.Graph) -> float:
-        # Calculates modularity of node and community
+    def modularity(self, graph: nx.Graph, communities: list) -> float:
+        # Calculates modularity of the graph
 
-        community.append(node)
+        # M value in mod calculation,
+        # total weight of all edges in graph
+        m_Val = graph.size(weight="weight")
 
-        # Gets total weight of graph, m value in modularity calc
-        allEdgeWeight = graph.size(weight="weight")
+        sum = 0
+        for i in graph.nodes:
+            for j in graph.nodes:
 
-        # Returns weight of nodes in compared community as a dictionary,
-        # k_i & k_j in modularity calc
-        nodeIndividualWeights = {}
-        for i in community[1:]:
-            nodeIndividualWeights[i] = self.nodeWeight(i, graph)
+                # Calculates summation step of mod calculation,
+                # iterating through all edges
 
-        modList = []
-        k = 1
-        for i in range(k, (len(community)-1)):
-            m = k + 1
-            for j in range(m, (len(community))):
-                # Make sure not evaluating the same nodes against each other
-                if community[i] == community[j]:
-                    continue
-
-                # Returns weight between two nodes, A_ij in modularity calc
-                twoNodesEdgeWeight = graph.get_edge_data(community[i],
-                                                         community[j],
-                                                         default=0)
-                if type(twoNodesEdgeWeight) is int and twoNodesEdgeWeight == 0:
-                    twoNodesEdgeWeight = float(twoNodesEdgeWeight)
+                # A value in mod calculation
+                if graph.has_edge(i, j):
+                    a_Val = graph.get_edge_data(i, j)["weight"]
                 else:
-                    twoNodesEdgeWeight = twoNodesEdgeWeight['weight']
-
-                # Calculates modularity
-                modularity = ((1.0 / (2.0 * (allEdgeWeight))) * (twoNodesEdgeWeight - (
-                             ((nodeIndividualWeights[community[i]]) * (nodeIndividualWeights[community[j]])) /
-                             (2.0 * (allEdgeWeight)))))
-                modList.append(modularity)
-                m += 1
-            k += 1
-        # Removes node from community after it was added for evaluation
-        # Will get added back into a community after comparing modularities
-        community.pop()
-
-        if len(modList) == 1:
-            # If only calculating modularity for 2 nodes
-            return modList[0]
+                    a_Val = 0.0
+                
+                # ki and kj value in mod calculation
+                ki_Val = self.nodeWeight(i, graph)
+                kj_Val = self.nodeWeight(j, graph)
+                
+                # Actual modularity calculation
+                sum += (a_Val - ((ki_Val * kj_Val) / (2.0 * m_Val))) * self.delta(i, j, communities)
+        
+        return sum / (2 * m_Val)
+    
+    def delta(self, node_i, node_j, communities: list) -> int:
+        # Delta value in modularity calculation,
+        # returns 1 if two nodes are in same community
+        # or 0 if they are not
+        if self.getCommunity(node_i, communities) == self.getCommunity(node_j, communities):
+            return 1
         else:
-            # If calculating modularity for 2+ nodes
-            totalModularity = 0
-            for i in modList:
-                totalModularity += i
-            return totalModularity
+            return 0
 
     def nodeWeight(self, node, graph: nx.Graph) -> float:
         # Calculates weight of a node through sum of edge weights
         weight = 0
-        nodeNeighbors = graph.neighbors(node)
-        for neighbor in nodeNeighbors:
+        for neighbor in graph.neighbors(node):
             weight += graph[node][neighbor]["weight"]
 
         return weight
-
-    def getMod(self, node, community=None, communities=None) -> float:
-        # Gets mod value of a specific node or community from current config
-        #
-        # Returns modularity of a given nodes community
-        if not community:
-            for findCommunity in communities:
-                if node in findCommunity:
-                    return findCommunity[0]
-        # Returns modularity of a community
-        else:
-            return community[0]
 
     def setRandQueue(self, inputCommunities) -> deque:
         # Sets the random queue for local node movement order
@@ -272,7 +242,7 @@ class Leiden:
 
         while len(randQueue) != len(inputCommunities):
             valIndex = random.choice(inputCommunities)
-            val = valIndex[1]
+            val = valIndex[0]                                               # No mod val in lists, just use first val now
             if val not in seen:
                 # Makes sure nodes aren't added 2+ times to queue
                 randQueue.append(val)
@@ -280,23 +250,21 @@ class Leiden:
 
         return randQueue
 
-    def addNodeToCommunity(self, node, mod, inputCommunity: list, communities: list) -> list:
+    def addNodeToCommunity(self, node, inputCommunity: list, communities: list) -> list:   # This is being revamped
         # Adds node to a community after evaluating modularity
         for checkCommunity in communities:
             # Removes node from past community
-            examineComm = checkCommunity[1:]
-            if node in examineComm:
+            if node in checkCommunity:
                 checkCommunity.remove(node)
 
                 # If past community is now empty, delete community
-                if (len(checkCommunity) == 1):
+                if not checkCommunity:
                     communities.remove(checkCommunity)
 
         for checkCommunity in communities:
-            # Adds node to new community, replace modularity
+            # Adds node to new community
             if checkCommunity == inputCommunity:
                 checkCommunity.append(node)
-                checkCommunity[0] = mod
 
         return communities
 
@@ -328,6 +296,12 @@ class Leiden:
         newGraph = self.graph
         newCommunities = self.setInitialorRefinedCommunities(newGraph)
 
+        # Sets initial agglomerated graph, used
+        # if fast local movement step yields
+        # ideal communities for final step,
+        # and agglomeratedGraph hasn't been set yet
+        agglomeratedGraph = None
+
         completed = False
         while not completed:
             # Run fast local movement step,
@@ -338,11 +312,12 @@ class Leiden:
             # then they can't be refined further and the graph
             # is set in its ideal community separation config
             for community in localmovementCommunities:
-                if len(community) > 2:
+                if len(community) > 1:
+                    completed = False
                     break
                 completed = True
 
-            if not completed:
+            if completed == False:
 
                 # Run refinement step,
                 # return new community partitions and graph
@@ -354,7 +329,12 @@ class Leiden:
                 newGraph = agglomeratedGraph
                 newCommunities = agglomeratedCommunities
 
-        return agglomeratedGraph, localmovementCommunities
+        if completed and agglomeratedGraph == None:
+                # If initial community separation results
+                # in the final community separation
+                return localmovementGraph, localmovementCommunities
+        else:
+            return agglomeratedGraph, localmovementCommunities
 
 
 def creategraph() -> nx.Graph:
