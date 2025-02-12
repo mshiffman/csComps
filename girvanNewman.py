@@ -90,7 +90,7 @@ class GirvanNewman:
         Uses self.graph and self.edgebetweenness to calculate which edge to remove.
         That edge is deleted from the graph and the process is repeated.
         Repeats until no nodes left.
-        Since we are doing this to detect communities, it saves an svg of some of the steps of this process
+        Since we are doing this to detect communities, will add code to save an svg of some of the steps of this process
         Rn works when using networkx built in edgebetweenness
         '''  
         iter = 0
