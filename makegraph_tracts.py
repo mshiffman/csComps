@@ -7,10 +7,6 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 
-
-
-#git token: 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
-
 #constructing a dictionary that leads each geocode to its census tract
 node_data_file = "mn_xwalk.csv"
 edge_data_file = "mn_od_main_JT00_2022.csv"
