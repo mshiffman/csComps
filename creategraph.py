@@ -54,7 +54,7 @@ for i in range(len(nodeData)):
 
 for i in range(len(tripCount)):
     source, dest = i
-    graph2.add_edge(source,dest, tripCount[i])
+    graph2.add_edge(source,dest, weight = tripCount[i])
 
 
 #save graphs as files
