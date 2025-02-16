@@ -6,6 +6,8 @@ import matplotlib
 
 matplotlib.use('Qt5Agg')
 
+#git token: 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
+
 #constructing a dictionary that leads each geocode to its census tract
 node_data_file = "mn_xwalk.csv"
 edge_data_file = "mn_od_main_JT00_2022.csv"
@@ -40,7 +42,7 @@ centroidDictionary = {}
 for tract in centroid_totals:
     centroidDictionary[tract] = (centroid_totals[tract][0]/centroid_totals[tract][2], 
                                  centroid_totals[tract][1]/centroid_totals[tract][2])
-    graph1.add_node(tract, pos=(centroidDictionary[tract][0], centroidDictionary[tract][1]))
+    graph1.add_node(tract, children = [], pos=(centroidDictionary[tract][0], centroidDictionary[tract][1]))
 
 
 print(len(edgeData))
