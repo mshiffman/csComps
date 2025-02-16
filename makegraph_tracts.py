@@ -1,10 +1,13 @@
 import pandas as pd
-import math
 import networkx as nx
-import matplotlib.pyplot as plt
-import matplotlib
 
-matplotlib.use('Qt5Agg')
+#must be in this order i think
+# import matplotlib
+# matplotlib.use('Qt5Agg')
+import matplotlib.pyplot as plt
+
+
+
 
 #git token: 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
 
@@ -26,7 +29,7 @@ for i in range(1, len(nodeData)):
         longitude = nodeData.iloc[i,39]
         tractDictionary[geocode] = censusTract
         coordsDictionary[geocode] = (latitude, longitude)
-print("done adding nodes")
+print("done adding nodes", len(coordsDictionary))
 
 centroid_totals = {}
 for key in coordsDictionary:
@@ -45,7 +48,6 @@ for tract in centroid_totals:
     graph1.add_node(tract, children = [], pos=(centroidDictionary[tract][0], centroidDictionary[tract][1]))
 
 
-print(len(edgeData))
 for i in range(1, len(edgeData)):
     start_geocode = edgeData.iloc[i,0]
     dest_geocode = edgeData.iloc[i,1]
