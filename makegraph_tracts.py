@@ -1,5 +1,7 @@
 import pandas as pd
 import networkx as nx
+import louvain_fixed
+import random
 
 #must be in this order i think
 # import matplotlib
@@ -19,13 +21,13 @@ graph1 = nx.Graph()
 
 for i in range(1, len(nodeData)):
     if nodeData.iloc[i,5] == "Hennepin County, MN":
+    #if nodeData.iloc[i,15] == "Brooklyn Center city, MN":
         geocode = nodeData.iloc[i,0]
         censusTract = nodeData.iloc[i,6]
         latitude = nodeData.iloc[i, 38] 
         longitude = nodeData.iloc[i,39]
         tractDictionary[geocode] = censusTract
         coordsDictionary[geocode] = (latitude, longitude)
-print("done adding nodes", len(coordsDictionary))
 
 centroid_totals = {}
 for key in coordsDictionary:
@@ -41,7 +43,8 @@ centroidDictionary = {}
 for tract in centroid_totals:
     centroidDictionary[tract] = (centroid_totals[tract][0]/centroid_totals[tract][2], 
                                  centroid_totals[tract][1]/centroid_totals[tract][2])
-    graph1.add_node(tract, children = [], pos=(centroidDictionary[tract][0], centroidDictionary[tract][1]))
+    graph1.add_node(tract, children = [], pos=(centroidDictionary[tract][0], centroidDictionary[tract][1]), color=None)
+print("done adding nodes", len(centroid_totals))
 
 
 for i in range(1, len(edgeData)):
@@ -50,12 +53,12 @@ for i in range(1, len(edgeData)):
     if start_geocode in tractDictionary and dest_geocode in tractDictionary:
         start_tract = tractDictionary[start_geocode]
         dest_tract = tractDictionary[dest_geocode]
-
-        key = (start_tract, dest_tract)
-        if key not in weightsDictionary:
-            weightsDictionary[key] = 1
-        else:
-            weightsDictionary[key] += 1
+        if start_tract != dest_tract:
+            key = (start_tract, dest_tract)
+            if key not in weightsDictionary:
+                weightsDictionary[key] = 1
+            else:
+                weightsDictionary[key] += 1
 
 print("created weight dictionary")
 
@@ -67,6 +70,27 @@ for key in weightsDictionary:
     edgeCount += 1
 print("added", edgeCount, "edges")
 
+def randomColors(n):
+    return [(random.random(), random.random(), random.random()) for _ in range(n)]
+
+graph = nx.erdos_renyi_graph(30, 0.4, seed=25)
+for u, v in graph.edges():
+    graph[u][v]['weight'] = random.uniform(0.1, 1.0)
+
+
+l = louvain_fixed.Louvain(graph1)
+#l = nx.community.louvain_communities(graph)
+l.run()
+colors = randomColors(len(l.nestedCommunities))
+count = 0
+for comm in l.nestedCommunities:
+    currentColor = colors[count]
+    count += 1
+    for node in comm:
+        nx.set_node_attributes(l.G, {node: {"color": currentColor}})
+
+node_colors = [l.G.nodes[n]["color"] for n in l.G.nodes]
+    
 plt.figure(figsize=(6, 6))
-nx.draw(graph1)
+nx.draw(graph1, node_color=node_colors)
 plt.show()
