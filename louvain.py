@@ -166,6 +166,7 @@ def main():
     print(nx.community.modularity(l.G, l.communities))
     print(nx.community.louvain_communities(graph))
     
+    
 
 if __name__ == "__main__":
     main()

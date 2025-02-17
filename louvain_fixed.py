@@ -63,6 +63,8 @@ class Louvain:
                             newGraph.add_edge(comm_iIndex,comm_jIndex, weight=self.G[i][j]['weight'])
             self.G = newGraph
             self.singletonCommunities()
+
+        self.G = self.originalGraph
         
 
 
@@ -103,7 +105,7 @@ class Louvain:
 
     def modularity(self):
         #might want to add resolution to alter the communities
-        return nx.community.modularity(self.G, self.communities)
+        return nx.community.modularity(self.G, self.communities, resolution=1.2)
  
 
     def nodeWeight(self, node):
@@ -129,7 +131,7 @@ class Louvain:
 
 def main():
     # Create a graph
-    graph = nx.erdos_renyi_graph(30, 0.1, seed=40)
+    graph = nx.erdos_renyi_graph(40, 0.4, seed=40)
     for u, v in graph.edges():
         graph[u][v]['weight'] = random.uniform(0.1, 1.0)
     print("graph made")
