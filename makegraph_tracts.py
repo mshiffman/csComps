@@ -2,6 +2,7 @@ import pandas as pd
 import networkx as nx
 import louvain_fixed
 import random
+import csv
 
 #must be in this order i think
 # import matplotlib
@@ -46,8 +47,8 @@ for tract in centroid_totals:
     centroidDictionary[tract] = (centroid_totals[tract][0]/centroid_totals[tract][2], 
                                  centroid_totals[tract][1]/centroid_totals[tract][2])
     graph1.add_node(tract, children = [], pos=(centroidDictionary[tract][0], centroidDictionary[tract][1]), color=None)
-print("done adding nodes", len(centroid_totals))
-
+#for key in centroidDictionary.keys():
+    #print(float(key), float(centroidDictionary[key][0]), float(centroidDictionary[key][1]))
 
 for i in range(1, len(edgeData)):
     start_geocode = edgeData.iloc[i,0]
@@ -70,7 +71,6 @@ for key in weightsDictionary:
     dest = key[1]
     graph1.add_edge(source, dest, weight=weightsDictionary[key])
     edgeCount += 1
-print("added", edgeCount, "edges")
 
 def randomColors(n):
     return [(random.random(), random.random(), random.random()) for _ in range(n)]
@@ -81,8 +81,15 @@ for u, v in graph.edges():
 
 
 l = louvain_fixed.Louvain(graph1)
-#l = nx.community.louvain_communities(graph)
 l.run()
+
+#creating a csv storing communities
+with open('louvain_data.csv', 'w', newline='') as file:
+    writer = csv.writer(file)
+    for comm in l.nestedCommunities:
+        writer.writerow(comm)
+
+#assigning the colors
 colors = randomColors(len(l.nestedCommunities))
 count = 0
 for comm in l.nestedCommunities:
