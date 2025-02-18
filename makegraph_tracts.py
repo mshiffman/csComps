@@ -7,7 +7,9 @@ import random
 # import matplotlib
 # matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
+import datetime
 
+start_time = datetime.datetime.now()
 
 #constructing a dictionary that leads each geocode to its census tract
 node_data_file = "mn_xwalk.csv"
@@ -93,4 +95,9 @@ node_colors = [l.G.nodes[n]["color"] for n in l.G.nodes]
     
 plt.figure(figsize=(6, 6))
 nx.draw(graph1, node_color=node_colors)
-plt.show()
+#plt.show()
+plt.savefig("/home/gordong/Desktop/louvain_1.3.svg")
+
+end_time = datetime.datetime.now()
+execution_time = end_time - start_time
+print(f"Execution time in seconds: {execution_time.total_seconds():.4f} seconds")
