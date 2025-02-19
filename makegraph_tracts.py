@@ -71,6 +71,7 @@ for key in weightsDictionary:
     graph1.add_edge(source, dest, weight=weightsDictionary[key])
     edgeCount += 1
 
+#saving the graph to pkl
 with open('graph.pkl', 'wb') as f:
     pickle.dump(graph1, f)
 
@@ -84,6 +85,7 @@ with open('louvain_data.csv', 'w', newline='') as file:
     for comm in l.nestedCommunities:
         writer.writerow(comm)
 
+#storing the centroids so we can work with them
 with open('coordinate_data.csv', 'w', newline = '') as file:
     writer = csv.writer(file)
     writer.writerow(["Tract", "Latitude", "Longitude"])
