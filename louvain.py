@@ -1,5 +1,6 @@
 import networkx as nx
 import random
+import math
 
 class Louvain:
 
@@ -20,7 +21,9 @@ class Louvain:
             improved = False
             #running phase 1 until modularity reaches a local maxima
             changesMade = True
-            while changesMade:
+            iterations = 0
+            while changesMade and iterations < 1000:
+                iterations += 1
                 changesMade = False
                 for node in self.G.nodes:
                     if self.nodeMovement(node) == True:
@@ -100,16 +103,16 @@ class Louvain:
                     
 
     def modularity(self):
-        edgeData = self.G.edges(data=True)
-
-        #finding the total weight of all edges in the graph
+    #finding the total weight of all edges in the graph
         m = 0
-        for edge in edgeData:
-            edgeWeight = edge[2]['weight']
-            m += edgeWeight
+        for i in self.G.nodes:
+            for j in self.G.nodes:
+                if self.G.has_edge(i,j):
+                    m += self.G.edges[i,j]["weight"]
+        m = m / 2
 
         #calculating the summation part of the modularity algorithm by iterating through edges
-        sum = 0
+        total = 0
         for i in self.G.nodes():
             for j in self.G.nodes():
                 if self.G.has_edge(i,j):
@@ -118,15 +121,16 @@ class Louvain:
                     A = 0
                 k_i = self.nodeWeight(i)
                 k_j = self.nodeWeight(j)
-                sum += (A - ((k_i * k_j)/(2*m))) * self.delta(i,j)
+                total += (A - ((k_i * k_j)/(2*m))) * self.delta(i,j)
         #finally, multiplying by 1/2m
-        return sum/(2 * m)
+        return total/(2 * m)
+    
 
     def nodeWeight(self, node):
         total = 0
-        for neighbor in self.G.neighbors(node):
-            weight = self.G.get_edge_data(neighbor, node)["weight"]
-            total += weight
+        for otherNode in self.G.nodes:
+            if self.G.has_edge(node, otherNode):
+                total += self.G.edges[node,otherNode]["weight"]
         return total
 
     def findCommunity(self, node):
@@ -145,25 +149,33 @@ class Louvain:
 
 def main():
     # Create a graph
-    '''graph = nx.erdos_renyi_graph(20, 0.2, seed=40)
+    '''
+    graph = nx.erdos_renyi_graph(15, 0.2, seed=40)
     for u, v in graph.edges():
-        graph[u][v]['weight'] = random.uniform(0.1, 1.0)
-    print("graph made")'''
+        graph[u][v]['weight'] = random.uniform(1, 5)
+    print("graph made")
+    '''
+    
     
     graph = nx.Graph()
-    graph.add_edge(0, 1, weight=4)
+    graph.add_edge(0, 0, weight = 14)
+    graph.add_edge(1, 1, weight=16)
+    graph.add_edge(2, 2, weight=2)
+    graph.add_edge(3, 3, weight=4)
+    graph.add_edge(0, 1, weight=1)
     graph.add_edge(0, 2, weight=1)
-    graph.add_edge(1, 2, weight=1)
-    graph.add_edge(1, 3, weight=1)
-    graph.add_edge(2, 3, weight=2)
-    graph.add_edge(2, 4, weight=4)
-    graph.add_edge(3, 4, weight=2)
+    graph.add_edge(3, 2, weight=1)
+    graph.add_edge(0, 3, weight=4)
+    graph.add_edge(1, 2, weight=3)
+    #l = Louvain(graph)
+    #l.singletonCommunities()
+    #print(nx.community.modularity(l.G, l.communities))
+    #print(l.modularity())
+    
 
     l = Louvain(graph)
     l.run()
     print(l.nestedCommunities)
-    print(l.modularity())
-    print(nx.community.modularity(l.G, l.communities))
     print(nx.community.louvain_communities(graph))
     
     
