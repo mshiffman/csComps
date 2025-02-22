@@ -1,6 +1,7 @@
 import networkx as nx
 import random
 import math
+from datetime import datetime
 
 class Louvain:
 
@@ -9,7 +10,7 @@ class Louvain:
         self.originalGraph = graph
         self.communities = []
         self.nestedCommunities = []
-    
+
     def run(self):
 
         self.singletonCommunities()
@@ -100,9 +101,8 @@ class Louvain:
                     community.remove(node)
             self.communities[originalCommunity].append(node)
         return nodeMoved
-                    
 
-    def modularity(self):
+    def oldModularity(self):
     #finding the total weight of all edges in the graph
         m = 0
         for i in self.G.nodes:
@@ -124,6 +124,7 @@ class Louvain:
                 total += (A - ((k_i * k_j)/(2*m))) * self.delta(i,j)
         #finally, multiplying by 1/2m
         return total/(2 * m)
+        #return nx.community.modularity(self.G, self.communities)
     
 
     def nodeWeight(self, node):
@@ -145,38 +146,37 @@ class Louvain:
         else: 
             return 0
 
+    def modularity(self):
+        fixedDegree = {
+            node: deg - (self.G.get_edge_data(node, node, {}).get("weight", 0)) 
+            for node, deg in self.G.degree(weight="weight")
+        }
+        degree_sum = sum(fixedDegree.values())
+        m = degree_sum/2
+        totalMod = 0
+        for comm in self.communities:
+            if len(comm) != 0:
+                sumC = sum(weight * (2 if u != v else 1) for u,v,weight in self.G.edges(data="weight") if u in comm and v in comm)
+                sumCHat = sum(fixedDegree[node] for node in comm)
+                totalMod += (sumC - ((sumCHat**2)/(2*m)))
+        return totalMod / (2*m)
     
 
 def main():
     # Create a graph
-    '''
-    graph = nx.erdos_renyi_graph(15, 0.2, seed=40)
-    for u, v in graph.edges():
-        graph[u][v]['weight'] = random.uniform(1, 5)
-    print("graph made")
-    '''
-    
-    
-    graph = nx.Graph()
-    graph.add_edge(0, 0, weight = 14)
-    graph.add_edge(1, 1, weight=16)
-    graph.add_edge(2, 2, weight=2)
-    graph.add_edge(3, 3, weight=4)
-    graph.add_edge(0, 1, weight=1)
-    graph.add_edge(0, 2, weight=1)
-    graph.add_edge(3, 2, weight=1)
-    graph.add_edge(0, 3, weight=4)
-    graph.add_edge(1, 2, weight=3)
-    #l = Louvain(graph)
-    #l.singletonCommunities()
-    #print(nx.community.modularity(l.G, l.communities))
-    #print(l.modularity())
-    
-
-    l = Louvain(graph)
-    l.run()
-    print(l.nestedCommunities)
-    print(nx.community.louvain_communities(graph))
+    for i in range(10):
+        graph = nx.erdos_renyi_graph(50, 0.1, seed=38)
+        for u, v in graph.edges():
+            graph[u][v]['weight'] = random.uniform(1, 5)
+        
+        l = Louvain(graph)
+        start_time = datetime.now()
+        l.run()
+        end_time = datetime.now()
+        elapsed_time = end_time - start_time
+        print(elapsed_time)
+        #print(l.nestedCommunities)
+        #print(nx.community.louvain_communities(graph))
     
     
 
