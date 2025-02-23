@@ -11,14 +11,20 @@ class Louvain:
         self.communities = []
         self.nestedCommunities = []
 
-    def run(self):
+    def run(self, resolution):
+        self.resolution = resolution
 
         self.singletonCommunities()
         improved = True
         firstIteration = True
 
+
         #general while loop, runs both phases until nothing is changed
         while improved:
+            self.fixedDegree = {
+            node: deg - (self.G.get_edge_data(node, node, {}).get("weight", 0)) 
+            for node, deg in self.G.degree(weight="weight")
+            }
             improved = False
             #running phase 1 until modularity reaches a local maxima
             changesMade = True
@@ -147,36 +153,37 @@ class Louvain:
             return 0
 
     def modularity(self):
-        fixedDegree = {
-            node: deg - (self.G.get_edge_data(node, node, {}).get("weight", 0)) 
-            for node, deg in self.G.degree(weight="weight")
-        }
-        degree_sum = sum(fixedDegree.values())
+        degree_sum = sum(self.fixedDegree.values())
         m = degree_sum/2
-        totalMod = 0
-        for comm in self.communities:
-            if len(comm) != 0:
-                sumC = sum(weight * (2 if u != v else 1) for u,v,weight in self.G.edges(data="weight") if u in comm and v in comm)
-                sumCHat = sum(fixedDegree[node] for node in comm)
-                totalMod += (sumC - ((sumCHat**2)/(2*m)))
-        return totalMod / (2*m)
+    
+        def community_contribution(community):
+            if len(community) != 0:
+                community = set(community)
+                sumC = sum(weight * (2 if u != v else 1) for u,v,weight in self.G.edges(data="weight") if u in community and v in community)
+                sumCHat = sum(self.fixedDegree[node] for node in community)
+                return sumC - self.resolution * ((sumCHat**2)/(2*m))
+            else:
+                return 0
+            
+        return sum(map(community_contribution, self.communities))
     
 
 def main():
     # Create a graph
+    
     for i in range(10):
-        graph = nx.erdos_renyi_graph(50, 0.1, seed=38)
+        start_time = datetime.now()
+        graph = nx.erdos_renyi_graph(100, 0.1, seed=38)
         for u, v in graph.edges():
-            graph[u][v]['weight'] = random.uniform(1, 5)
+            graph[u][v]['weight'] = random.randint(1,20)
         
         l = Louvain(graph)
-        start_time = datetime.now()
-        l.run()
+        l.run(1)     
+
         end_time = datetime.now()
-        elapsed_time = end_time - start_time
-        print(elapsed_time)
-        #print(l.nestedCommunities)
-        #print(nx.community.louvain_communities(graph))
+        execution_time = end_time - start_time
+        print(f"Execution time in seconds: {execution_time.total_seconds():.4f} seconds")
+                                                             
     
     
 

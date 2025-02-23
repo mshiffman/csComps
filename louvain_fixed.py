@@ -1,5 +1,6 @@
 import networkx as nx
 import random
+from datetime import datetime
 
 class Louvain:
 
@@ -130,25 +131,18 @@ class Louvain:
     
 
 def main():
-    # Create a graph
-    graph = nx.erdos_renyi_graph(40, 0.4, seed=40)
-    for u, v in graph.edges():
-        graph[u][v]['weight'] = random.uniform(0.1, 1.0)
-    print("graph made")
-    
-    '''graph = nx.Graph()
-    graph.add_edge(0, 1, weight=4)
-    graph.add_edge(0, 2, weight=1)
-    graph.add_edge(1, 2, weight=1)
-    graph.add_edge(1, 3, weight=1)
-    graph.add_edge(2, 3, weight=2)
-    graph.add_edge(2, 4, weight=4)
-    graph.add_edge(3, 4, weight=2)'''
+    for i in range(10):
+        start_time = datetime.now()
+        graph = nx.erdos_renyi_graph(100, 0.1, seed=38)
+        for u, v in graph.edges():
+            graph[u][v]['weight'] = random.randint(1,20)
+        
+        l = Louvain(graph)
+        l.run()     
 
-    l = Louvain(graph)
-    l.run()
-    print(l.nestedCommunities)
-    print(nx.community.louvain_communities(graph))
+        end_time = datetime.now()
+        execution_time = end_time - start_time
+        print(f"Execution time in seconds: {execution_time.total_seconds():.4f} seconds")
     
 
 if __name__ == "__main__":
