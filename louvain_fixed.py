@@ -138,7 +138,8 @@ def main():
             graph[u][v]['weight'] = random.randint(1,20)
         
         l = Louvain(graph)
-        l.run()     
+        l.run()
+        print(l.nestedCommunities)     
 
         end_time = datetime.now()
         execution_time = end_time - start_time
