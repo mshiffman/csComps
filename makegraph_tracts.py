@@ -75,24 +75,6 @@ for key in weightsDictionary:
 with open('graph.pkl', 'wb') as f:
     pickle.dump(graph1, f)
 
-#run the louvain algorithm on the tract graph
-l = louvain_fixed.Louvain(graph1)
-l.run()
-
-#creating a csv storing communities
-with open('louvain_data.csv', 'w', newline='') as file:
-    writer = csv.writer(file)
-    for comm in l.nestedCommunities:
-        writer.writerow(comm)
-
-#storing the centroids so we can work with them
-with open('coordinate_data.csv', 'w', newline = '') as file:
-    writer = csv.writer(file)
-    writer.writerow(["Tract", "Latitude", "Longitude"])
-    for tract in centroidDictionary.keys():
-        row = [tract, centroidDictionary[tract][0], centroidDictionary[tract][1]]
-        writer.writerow(row)
-
 ''' this is a bunch of business we don't need right now
 def randomColors(n):
     return [(random.random(), random.random(), random.random()) for _ in range(n)]
