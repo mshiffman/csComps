@@ -6,6 +6,7 @@ import networkx as nx
 class GirvanNewman:
     def __init__(self, graph: nx.Graph):
         self.graph = graph
+        self.originalGraph = graph
 
     def bfs(self, sourceNode):
         '''
@@ -29,16 +30,16 @@ class GirvanNewman:
             parents[targetNode]=[]
 
         while len(queue)>0:
-                inBetweenNode = queue.popleft()
-                stack.append(inBetweenNode)
-                
-                for neighborNode in self.graph.neighbors(inBetweenNode):
-                    if distance[neighborNode] == -1:
-                        queue.append(neighborNode)
-                        distance[neighborNode]=distance[inBetweenNode]+1
-                    if distance[neighborNode]==distance[inBetweenNode]+1:
-                        sigma[neighborNode]+=sigma[inBetweenNode]
-                        parents[neighborNode].append(inBetweenNode)
+            inBetweenNode = queue.popleft()
+            stack.append(inBetweenNode)
+            
+            for neighborNode in self.graph.neighbors(inBetweenNode):
+                if distance[neighborNode] == -1:
+                    queue.append(neighborNode)
+                    distance[neighborNode]=distance[inBetweenNode]+1
+                if distance[neighborNode]==distance[inBetweenNode]+1:
+                    sigma[neighborNode]+=sigma[inBetweenNode]
+                    parents[neighborNode].append(inBetweenNode)
         return stack, parents, sigma, delta
 
 
@@ -72,7 +73,7 @@ class GirvanNewman:
                 if dist <= distance[inBetweenNode]:
                     for neighborNode in self.graph.neighbors(inBetweenNode):
 
-                        edgeWeight = self.graph[inBetweenNode][neighborNode].get('weight', 1)
+                        edgeWeight = self.graph[inBetweenNode][neighborNode].get("weight", 1)
                         newDist = distance[inBetweenNode]+edgeWeight
 
                         if newDist < distance[neighborNode]:
@@ -121,58 +122,149 @@ class GirvanNewman:
 
 
     def girvanNewmanAlgo(self, weight):
+        '''
+        https://medium.com/smucs/community-detection-label-propagation-vs-girvan-newman-part-1-c7f8680062c8#:~:text=Well%2C%20this%20is%20the%20result,of%20modularity%20comes%20into%20play.&text=Essentially%2C%20modularity%20measures%20how%20strong,graph%20into%20separate%20communities%20is.
+        '''
+        bestPartition = None
+        bestModularity = float("-inf")
         while len(self.graph.edges)>0:
             edgeBetweenness = self.calculateEdgeBetweenness(weight)
             highestEdge = max(edgeBetweenness, key=edgeBetweenness.get)
             self.graph.remove_edge(*highestEdge)
-            self.checkAgainstNX(weight)
-            self.plotGraph()
 
-    def plotGraph(self):
-        nx.draw(self.graph)
-        plt.show()
+            communities = self.getCommunities()
+            curModularity = self.modularity(self.originalGraph,communities)
+            
+            if curModularity>bestModularity:
+                bestModularity=curModularity
+                bestPartition = communities
+            else:
+                break
+
+        return bestPartition
     
-    def checkAgainstNX(self, weight):
-        if weight == True:
-            customEbc = self.calculateEdgeBetweenness(weight=True)
-            nxEbc = nx.edge_betweenness_centrality(self.graph, weight="weight", normalized=False)
-        else:
-            customEbc = self.calculateEdgeBetweenness(weight=False)
-            nxEbc = nx.edge_betweenness_centrality(self.graph, weight=False, normalized=False)
+    def getCommunities(self):
+        '''
+        Get the communities in a graph
+        '''
+        visited = {}
+        communities = []
 
-        #used chatGPT for formatting this output
-        print(f"{'Edge':<10} {'Custom':<10} {'NetworkX':<10}")
-        print("=" * 30)
-        for edge in self.graph.edges():
-            print(f"{str(edge):<10} {customEbc[edge]:<10.6f} {nxEbc[edge]:<10.6f}")
+        for node in self.graph.nodes():
+            visited[node] = False
+        
+        for node in self.graph.nodes():
+            if visited[node]==False:
+                curCommunity, visited = self.connectedBFS(node, visited)
+                communities.append(curCommunity)
 
-        assert all(abs(customEbc[e] - nxEbc[e]) < 1e-6 for e in self.graph.edges()), "Mismatch in results!"
+        return communities
+                
+
+    def connectedBFS(self, node, visited):
+        '''
+        Use BFS to find all connected nodes
+        '''
+        queue = deque([node])
+        curCommunity = [node]
+        visited[node]=True
+
+        while len(queue)>0:
+            inBetweenNode = queue.popleft()         
+            for neighborNode in self.graph.neighbors(inBetweenNode):
+                if visited[neighborNode]==False:
+                    queue.append(neighborNode)
+                    visited[neighborNode]= True
+                    curCommunity.append(neighborNode)
+        return curCommunity, visited
 
 
-G = nx.Graph()
-G.add_weighted_edges_from([
-    ('A', 'B', 1),
-    ('B', 'C', 2),
-    ('A', 'C', 2), 
-    ('C', 'D', 1),
-    ('D', 'E', 2),
-    ('B', 'E', 3)
-])
-gnG = GirvanNewman(G)
-#Weighted Edges
-print("weighted")
-gnG.girvanNewmanAlgo(True)
 
-G = nx.Graph()
-G.add_weighted_edges_from([
-    ('A', 'B', 1),
-    ('B', 'C', 2),
-    ('A', 'C', 2), 
-    ('C', 'D', 1),
-    ('D', 'E', 2),
-    ('B', 'E', 3)
-])
-gnG = GirvanNewman(G)
-#unweighted edges
-print("unweighted")
-gnG.girvanNewmanAlgo(False)
+    def modularity(self, graph, communities):
+        '''
+        m = number of edges (unweighted), weighted = 1/2*sum(all weights for nodes i,j)
+        Aij = edge weight for the edge between i and j
+        Ki = weighted degree of i
+        Kj = weighted degree of j
+        delta 1 if in same community, 0 if not
+        mod = 1/2m * sum(Aij- ((ki*kj)/2m)* delta)
+        '''
+
+        m = graph.size(weight="weight")
+        summation = 0.0
+        for i in graph.nodes():
+            for j in graph.nodes():
+                if graph.has_edge(i,j):
+                    Aij = graph[i][j].get("weight", 1)
+                else:
+                    Aij = 0
+                Ki = self.getDegree(i, graph)
+                Kj = self.getDegree(j, graph)
+
+                com1 = self.getCommunity(i, communities)
+                com2 = self.getCommunity(j, communities)
+                if com1 == com2:
+                    delta = 1
+                else:
+                    delta = 0
+                summation += (Aij - ((Ki*Kj)/(2*m)))* delta
+        
+        modScore = 1/ (2*m) * summation
+        return modScore 
+
+    def getDegree(self, node, graph):
+        '''
+        returns the degree of a node
+        '''
+        degree = 0
+        for neighbor in graph.neighbors(node):
+            edge = graph[node][neighbor].get("weight", 1)
+            degree +=edge
+        return degree  
+
+    def getCommunity(self, node, communities):
+        '''
+        returns the index of the community a node belongs to
+        '''
+        for i in range(len(communities)):
+            if node in communities[i]:
+                return i
+
+
+
+
+def main():
+
+    G = nx.Graph()
+    G.add_weighted_edges_from([
+        ("A", "B", 1),
+        ("B", "C", 2),
+        ("A", "C", 2), 
+        ("C", "D", 1),
+        ("D", "E", 2),
+        ("B", "E", 3)
+    ])
+    gnG = GirvanNewman(G)
+    nx.draw(G, with_labels=True)
+    plt.show()
+    
+    #Weighted Edges
+    print("weighted")
+    print(gnG.girvanNewmanAlgo(True))
+
+    G = nx.Graph()
+    G.add_weighted_edges_from([
+        ("A", "B", 1),
+        ("B", "C", 2),
+        ("A", "C", 2), 
+        ("C", "D", 1),
+        ("D", "E", 2),
+        ("B", "E", 3)
+    ])
+    gnG = GirvanNewman(G)
+    #unweighted edges
+    print("unweighted")
+    print(gnG.girvanNewmanAlgo(False))
+
+if __name__ == "__main__":
+    main()
