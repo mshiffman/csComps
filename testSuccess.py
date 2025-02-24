@@ -1,6 +1,5 @@
 import pickle
 import networkx as nx
-from leiden import Leiden
 
 #Conductance eq source: https://www.youtube.com/watch?v=Q_kJGm1xf6s
 def graphAvgConductance(graph, communities):
