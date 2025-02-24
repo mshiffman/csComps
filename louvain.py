@@ -86,7 +86,7 @@ class Louvain:
                 comm.remove(node)
             if destNode in comm:
                 comm.append(node)
-
+    
     def nodeMovement(self, node):
         originalCommunity = self.findCommunity(node)
         nodeMoved = False
@@ -95,9 +95,11 @@ class Louvain:
         for neighbor in nx.neighbors(self.G, node):
             if self.findCommunity(node) != self.findCommunity(neighbor):
                 self.nodeToCommunity(node,neighbor)
-            if self.modularity() > curMod:
-                nodeMoved = True
-                bestNeighbor = neighbor
+                newMod = self.modularity()
+                if newMod > curMod:
+                    curMod = newMod
+                    nodeMoved = True
+                    bestNeighbor = neighbor
         if node != bestNeighbor:
             self.nodeToCommunity(node, bestNeighbor)
         else:
@@ -165,19 +167,25 @@ class Louvain:
         return totalSum / (2 * m)
 
 def main():
-    for i in range(10):
-        start_time = datetime.now()
-        graph = nx.erdos_renyi_graph(100, 0.1, seed = 38)
-        for u, v in graph.edges():
-            graph[u][v]['weight'] = random.randint(1,20)
+    start_time = datetime.now()
+    graph = nx.Graph()
+    graph.add_edge(0,0,weight=14)
+    graph.add_edge(1,1,weight=16)
+    graph.add_edge(2,2,weight=2)
+    graph.add_edge(3,3,weight=4)
+    graph.add_edge(0,1,weight=1)
+    graph.add_edge(0,2,weight=1)
+    graph.add_edge(2,3,weight=1)
+    graph.add_edge(0,3,weight=4)
+    graph.add_edge(1,2,weight=3)
 
-        l = Louvain(graph)
-        l.run()
-        print(l.nestedCommunities)
+    l = Louvain(graph)
+    l.run()
+    print(l.nestedCommunities)
 
-        end_time = datetime.now()
-        execution_time = end_time - start_time
-        print(f"Execution time in seconds: {execution_time.total_seconds():.4f} seconds")
+    end_time = datetime.now()
+    execution_time = end_time - start_time
+    print(f"Execution time in seconds: {execution_time.total_seconds():.4f} seconds")
     
 
 
