@@ -121,28 +121,68 @@ class GirvanNewman:
     
 
 
-    def girvanNewmanAlgo(self, weight):
+    def girvanNewmanAlgo(self, weight, method):
         '''
         https://medium.com/smucs/community-detection-label-propagation-vs-girvan-newman-part-1-c7f8680062c8#:~:text=Well%2C%20this%20is%20the%20result,of%20modularity%20comes%20into%20play.&text=Essentially%2C%20modularity%20measures%20how%20strong,graph%20into%20separate%20communities%20is.
         '''
-        bestPartition = None
-        bestModularity = float("-inf")
-        while len(self.graph.edges)>0:
-            edgeBetweenness = self.calculateEdgeBetweenness(weight)
-            highestEdge = max(edgeBetweenness, key=edgeBetweenness.get)
-            self.graph.remove_edge(*highestEdge)
+        
+        if method == "modularity":
+            bestPartition = None
+            bestModularity = float("-inf")
+            while len(self.graph.edges)>0:
+                edgeBetweenness = self.calculateEdgeBetweenness(weight)
+                highestEdge = max(edgeBetweenness, key=edgeBetweenness.get)
+                self.graph.remove_edge(*highestEdge)
 
-            communities = self.getCommunities()
-            curModularity = self.modularity(self.originalGraph,communities)
-            print(curModularity)
-            if curModularity>bestModularity:
-                bestModularity=curModularity
-                bestPartition = communities
-            else:
-                break
+                communities = self.getCommunities()
+                curModularity = self.modularity(self.originalGraph,communities)
+                if curModularity>bestModularity:
+                    bestModularity=curModularity
+                    bestPartition = communities
+                else:
+                    break
+            return bestPartition
+        elif method == "modularityNum":
+            bestPartition = None
+            bestModularity = float("-inf")
+            while len(self.graph.edges)>0:
+                edgeBetweenness = self.calculateEdgeBetweenness(weight)
+                highestEdge = max(edgeBetweenness, key=edgeBetweenness.get)
+                self.graph.remove_edge(*highestEdge)
 
-        return bestPartition
-    
+                communities = self.getCommunities()
+                curModularity = self.modularity(self.originalGraph,communities)
+                if curModularity>bestModularity:
+                    bestModularity=curModularity
+                    bestPartition = communities
+                    if len(communities)>15:
+                        break
+                else:
+                    if len(communities)<7 or len(communities)>15:
+                        break
+            return bestPartition
+        elif method == "numEdges75":
+            totalEdges = len(self.graph.edges())
+            while len(self.graph.edges)>totalEdges*.25:
+                edgeBetweenness = self.calculateEdgeBetweenness(weight)
+                highestEdge = max(edgeBetweenness, key=edgeBetweenness.get)
+                self.graph.remove_edge(*highestEdge)
+                communities = self.getCommunities()
+            return communities
+        elif method == "dendrogram":
+            dendrogram = []
+            while len(self.graph.edges)>0:
+                edgeBetweenness = self.calculateEdgeBetweenness(weight)
+                highestEdge = max(edgeBetweenness, key=edgeBetweenness.get)
+                self.graph.remove_edge(*highestEdge)
+                communities = self.getCommunities()
+                if len(dendrogram)==0 or dendrogram[-1]!=communities:
+                    dendrogram.append(sorted(communities))
+            return dendrogram
+        else:
+            return False
+        
+                
     def getCommunities(self):
         '''
         Get the communities in a graph
@@ -156,7 +196,7 @@ class GirvanNewman:
         for node in self.graph.nodes():
             if visited[node]==False:
                 curCommunity, visited = self.connectedBFS(node, visited)
-                communities.append(curCommunity)
+                communities.append(sorted(curCommunity))
 
         return communities
                 
@@ -271,7 +311,7 @@ def main():
     
     #Weighted Edges
     print("weighted")
-    print(gnG.girvanNewmanAlgo(True))
+    print(gnG.girvanNewmanAlgo(True, "numEdges75"))
 
     G = nx.Graph()
     G.add_weighted_edges_from([
@@ -285,7 +325,6 @@ def main():
     gnG = GirvanNewman(G)
     #unweighted edges
     print("unweighted")
-    print(gnG.girvanNewmanAlgo(False))
-
+    print(gnG.girvanNewmanAlgo(False, "numEdges75"))
 if __name__ == "__main__":
     main()
