@@ -76,21 +76,21 @@ print("Modularity\n", girvanStats1)
 
 
 
-print("\n")
-with open("graphGN.pkl", 'rb') as f:
-    G = pickle.load(f)
-girvan2Graph = GirvanNewman(G)
-girvan2Start = time.time()
-girvan2Result = girvan2Graph.girvanNewmanAlgo(True, "modularityNum")
-girvan2End = time.time()
-girvan2Runtime = girvan2End - girvan2Start
-girvanStats2["runtime"].append(girvan2Runtime)
-girvanStats2["results"].append(girvan2Result)
+# print("\n")
+# with open("graphGN.pkl", 'rb') as f:
+#     G = pickle.load(f)
+# girvan2Graph = GirvanNewman(G)
+# girvan2Start = time.time()
+# girvan2Result = girvan2Graph.girvanNewmanAlgo(True, "modularityNum")
+# girvan2End = time.time()
+# girvan2Runtime = girvan2End - girvan2Start
+# girvanStats2["runtime"].append(girvan2Runtime)
+# girvanStats2["results"].append(girvan2Result)
 
-with open('GirvanAlgoResults/girvanStats2.pkl', 'wb') as f:
-    pickle.dump(girvanStats2, f)
+# with open('GirvanAlgoResults/girvanStats2.pkl', 'wb') as f:
+#     pickle.dump(girvanStats2, f)
     
-print("ModularityNum\n",girvanStats2)
+# print("ModularityNum\n",girvanStats2)
 
 
 

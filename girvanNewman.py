@@ -142,25 +142,25 @@ class GirvanNewman:
                 else:
                     break
             return bestPartition
-        elif method == "modularityNum":
-            bestPartition = None
-            bestModularity = float("-inf")
-            while len(self.graph.edges)>0:
-                edgeBetweenness = self.calculateEdgeBetweenness(weight)
-                highestEdge = max(edgeBetweenness, key=edgeBetweenness.get)
-                self.graph.remove_edge(*highestEdge)
+        # elif method == "modularityNum":
+        #     bestPartition = None
+        #     bestModularity = float("-inf")
+        #     while len(self.graph.edges)>0:
+        #         edgeBetweenness = self.calculateEdgeBetweenness(weight)
+        #         highestEdge = max(edgeBetweenness, key=edgeBetweenness.get)
+        #         self.graph.remove_edge(*highestEdge)
 
-                communities = self.getCommunities()
-                curModularity = self.modularity(self.originalGraph,communities)
-                if curModularity>bestModularity:
-                    bestModularity=curModularity
-                    bestPartition = communities
-                    if len(communities)>15:
-                        break
-                else:
-                    if len(communities)>7:
-                        break
-            return bestPartition
+        #         communities = self.getCommunities()
+        #         curModularity = self.modularity(self.originalGraph,communities)
+        #         if curModularity>bestModularity:
+        #             bestModularity=curModularity
+        #             bestPartition = communities
+        #             if len(communities)>15:
+        #                 break
+        #         else:
+        #             if len(communities)>7:
+        #                 break
+            # return bestPartition
         elif method == "numEdges75":
             totalEdges = len(self.graph.edges())
             while len(self.graph.edges)>totalEdges*.25:
