@@ -5,7 +5,7 @@ from louvain import Louvain
 from girvanNewman import GirvanNewman
 import networkx as nx
 from testSuccess import *
-``
+
 leidenStats = {"runtime":[], "modularity":[], "avgConductance":[], "avgDensity":[], "constantPotts":[], "results":[]}
 louvainStats = {"runtime":[], "modularity":[], "avgConductance":[], "avgDensity":[], "constantPotts":[], "results":[]}
 girvanStats = {"runtime":[], "modularity":[], "avgConductance":[], "avgDensity":[], "constantPotts":[], "results":[]}

@@ -134,7 +134,7 @@ class GirvanNewman:
 
             communities = self.getCommunities()
             curModularity = self.modularity(self.originalGraph,communities)
-            
+            print(curModularity)
             if curModularity>bestModularity:
                 bestModularity=curModularity
                 bestPartition = communities
@@ -178,57 +178,78 @@ class GirvanNewman:
                     curCommunity.append(neighborNode)
         return curCommunity, visited
 
+    def modularity(self, graph: nx.Graph, communities: list) -> float:
+        self.setFixedDegrees(graph)
+        # Calculates modularity of the graph
 
+        degree_sum = sum(self.fixedDegree.values())
+        m = degree_sum/2
 
-    def modularity(self, graph, communities):
-        '''
-        m = number of edges (unweighted), weighted = 1/2*sum(all weights for nodes i,j)
-        Aij = edge weight for the edge between i and j
-        Ki = weighted degree of i
-        Kj = weighted degree of j
-        delta 1 if in same community, 0 if not
-        mod = 1/2m * sum(Aij- ((ki*kj)/2m)* delta)
-        '''
+        totalSum = 0
+        for community in communities:
+            if len(community) != 0:
+                community = set(community)
+                sumC = sum(weight * (2 if u != v else 1) for u,v,weight in graph.edges(community, data="weight", default = 0) if v in community)
+                sumCHat = sum(self.fixedDegree[node] for node in community)
+                totalSum += (sumC - ((sumCHat**2)/(2*m)))
+        return totalSum / (2 * m)
 
-        m = graph.size(weight="weight")
-        summation = 0.0
-        for i in graph.nodes():
-            for j in graph.nodes():
-                if graph.has_edge(i,j):
-                    Aij = graph[i][j].get("weight", 1)
-                else:
-                    Aij = 0
-                Ki = self.getDegree(i, graph)
-                Kj = self.getDegree(j, graph)
+    def setFixedDegrees(self, graph: nx.Graph) -> None:
+        #Used to calculate modularity for current graph & community division
+        self.fixedDegree = {
+            node: deg - (graph.get_edge_data(node, node, {}).get("weight", 0)) 
+            for node, deg in graph.degree(weight="weight")
+            }
 
-                com1 = self.getCommunity(i, communities)
-                com2 = self.getCommunity(j, communities)
-                if com1 == com2:
-                    delta = 1
-                else:
-                    delta = 0
-                summation += (Aij - ((Ki*Kj)/(2*m)))* delta
+    # def modularity(self, graph, communities):
+    #     '''
+    #     m = number of edges (unweighted), weighted = 1/2*sum(all weights for nodes i,j)
+    #     Aij = edge weight for the edge between i and j
+    #     Ki = weighted degree of i
+    #     Kj = weighted degree of j
+    #     delta 1 if in same community, 0 if not
+    #     mod = 1/2m * sum(Aij- ((ki*kj)/2m)* delta)
+    #     '''
+
+    #     m = graph.size(weight="weight")
+    #     summation = 0.0
+    #     for i in graph.nodes():
+    #         for j in graph.nodes():
+    #             if graph.has_edge(i,j):
+    #                 Aij = graph[i][j].get("weight", 1)
+    #             else:
+    #                 Aij = 0
+    #             Ki = self.getDegree(i, graph)
+    #             Kj = self.getDegree(j, graph)
+
+    #             com1 = self.getCommunity(i, communities)
+    #             com2 = self.getCommunity(j, communities)
+    #             if com1 == com2:
+    #                 delta = 1
+    #             else:
+    #                 delta = 0
+    #             summation += (Aij - ((Ki*Kj)/(2*m)))* delta
         
-        modScore = 1/ (2*m) * summation
-        return modScore 
+    #     modScore = 1/ (2*m) * summation
+    #     return modScore 
 
-    def getDegree(self, node, graph):
-        '''
-        returns the degree of a node
-        '''
-        degree = 0
-        for neighbor in graph.neighbors(node):
-            edge = graph[node][neighbor].get("weight", 1)
-            degree +=edge
-        return degree  
+    # def getDegree(self, node, graph):
+    #     '''
+    #     returns the degree of a node
+    #     '''
+    #     degree = 0
+    #     for neighbor in graph.neighbors(node):
+    #         edge = graph[node][neighbor].get("weight", 1)
+    #         degree +=edge
+    #     return degree  
 
-    def getCommunity(self, node, communities):
-        '''
-        returns the index of the community a node belongs to
-        '''
-        for i in range(len(communities)):
-            if node in communities[i]:
-                return i
+    # def getCommunity(self, node, communities):
+    #     '''
+    #     returns the index of the community a node belongs to
+    #     '''
+    #     for i in range(len(communities)):
+    #         if node in communities[i]:
+    #             return i
 
 
 
@@ -245,8 +266,8 @@ def main():
         ("B", "E", 3)
     ])
     gnG = GirvanNewman(G)
-    nx.draw(G, with_labels=True)
-    plt.show()
+    # nx.draw(G, with_labels=True)
+    # plt.show()
     
     #Weighted Edges
     print("weighted")
