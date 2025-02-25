@@ -158,7 +158,7 @@ class GirvanNewman:
                     if len(communities)>15:
                         break
                 else:
-                    if len(communities)<7 or len(communities)>15:
+                    if len(communities)>7:
                         break
             return bestPartition
         elif method == "numEdges75":
