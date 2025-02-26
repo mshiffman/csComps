@@ -1,6 +1,5 @@
 import pickle
-import networkx
-from leiden import Leiden
+import networkx as nx
 
 #Conductance eq source: https://www.youtube.com/watch?v=Q_kJGm1xf6s
 def graphAvgConductance(graph, communities):
@@ -17,7 +16,10 @@ def graphAvgConductance(graph, communities):
                   externalEdges +=1
          num = externalEdges
          den = 2* internalEdges + externalEdges
-         conductance = num/den
+         if den == 0:
+            conductance = 0
+         else:
+            conductance = num/den
          totalConductance += conductance
          commCount +=1
    if commCount>0:
@@ -34,13 +36,12 @@ def graphAvgDensity(graph, communities):
    for community in communities:
       size = len(community)
       if size >1:
-         for node in range(size):
-            numEdges = graph.subgraph(community).number_of_edges()
-            num= 2 * numEdges
-            den = size * (size-1)
-            commDensity = num/den
-            totalDensity+=commDensity
-            commCount +=1
+         numEdges = graph.subgraph(community).number_of_edges()
+         num= 2 * numEdges
+         den = size * (size-1)
+         commDensity = num/den
+         totalDensity+=commDensity
+         commCount +=1
    if commCount>0:
       return totalDensity/commCount
    else:
@@ -50,25 +51,70 @@ def graphAvgDensity(graph, communities):
 def constantPotts(graph, communities, resolution):
    summation = 0
    for community in communities:
-      edgesInComm = graph.subgraph(community).number_of_edges()
-      nodesInComm = len(graph.subgraph(community))
-      thisComm = edgesInComm - resolution*(nodesInComm**2)
-      summation+=thisComm
-   return -summation
+      for nodeI in community:
+         for nodeJ in community:
+            if nodeI != nodeJ:
+               if graph.has_edge(nodeI,nodeJ):
+                  Wij = graph[nodeI][nodeJ].get("weight", 1)
+               else:
+                  Wij = 0
+               summation += Wij - resolution
+   return -summation/2
 
-def graphModularity(graph, communities):
-   edges = graph.size(weight = "weight")
-   accum_Modularity = 0.0
+def modularity(graph, communities):
+   '''
+   m = number of edges (unweighted), weighted = 1/2*sum(all weights for nodes i,j)
+   Aij = edge weight for the edge between i and j
+   Ki = weighted degree of i
+   Kj = weighted degree of j
+   delta 1 if in same community, 0 if not
+   mod = 1/2m * sum(Aij- ((ki*kj)/2m)* delta)
+   '''
 
-   for eachCommunity in range(len(communities)):
-      for eachNode in eachCommunity:
-         accum_Modularity+= Leiden.modularity(eachNode, eachCommunity, graph)
+   m = graph.size(weight="weight")
+   summation = 0.0
+   for i in graph.nodes():
+      for j in graph.nodes():
+            if graph.has_edge(i,j):
+               Aij = graph[i][j].get("weight", 1)
+            else:
+               Aij = 0
+            Ki = getDegree(i, graph)
+            Kj = getDegree(j, graph)
 
-   return accum_Modularity/(2*edges)
+            com1 = getCommunity(i, communities)
+            com2 = getCommunity(j, communities)
+            if com1 == com2:
+               delta = 1
+            else:
+               delta = 0
+            summation += (Aij - ((Ki*Kj)/(2*m)))* delta
+   
+   modScore = 1/ (2*m) * summation
+   return modScore 
 
-#to open pickle file:
-fileName = 'graph1.pkl'
-with open(fileName, 'rb') as f:
-   graph1 = pickle.load(f)
+def getDegree(node, graph):
+   '''
+   returns the degree of a node
+   '''
+   degree = 0
+   for neighbor in graph.neighbors(node):
+      edge = graph[node][neighbor].get("weight", 1)
+      degree +=edge
+   return degree  
 
-graphAvgDensity(graph1, communities=[])
+def getCommunity(node, communities):
+   '''
+   returns the index of the community a node belongs to
+   '''
+   for i in range(len(communities)):
+      if node in communities[i]:
+            return i
+
+
+# #to open pickle file:
+# fileName = 'graph1.pkl'
+# with open(fileName, 'rb') as f:
+#    graph1 = pickle.load(f)
+
+# graphAvgDensity(graph1, communities=[])

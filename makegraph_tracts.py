@@ -22,6 +22,7 @@ tractDictionary  = {}
 weightsDictionary = {}
 coordsDictionary = {}
 graph1 = nx.Graph()
+graph2 = nx.Graph()
 
 for i in range(1, len(nodeData)):
     if nodeData.iloc[i,5] == "Hennepin County, MN":
@@ -48,6 +49,7 @@ for tract in centroid_totals:
     centroidDictionary[tract] = (centroid_totals[tract][0]/centroid_totals[tract][2], 
                                  centroid_totals[tract][1]/centroid_totals[tract][2])
     graph1.add_node(tract, children = [], pos=(centroidDictionary[tract][0], centroidDictionary[tract][1]), color=None)
+    graph2.add_node(tract, children = [], pos=(centroidDictionary[tract][0], centroidDictionary[tract][1]), color=None)
 
 for i in range(1, len(edgeData)):
     start_geocode = edgeData.iloc[i,0]
@@ -69,11 +71,32 @@ for key in weightsDictionary:
     source = key[0]
     dest = key[1]
     graph1.add_edge(source, dest, weight=weightsDictionary[key])
+    graph2.add_edge(source, dest, weight=1/weightsDictionary[key])
     edgeCount += 1
 
 #saving the graph to pkl
 with open('graph.pkl', 'wb') as f:
     pickle.dump(graph1, f)
+with open('graphGN.pkl', 'wb') as f:
+    pickle.dump(graph2, f)
+
+# #run the louvain algorithm on the tract graph
+# l = louvain_fixed.Louvain(graph1)
+# l.run()
+
+# #creating a csv storing communities
+# with open('louvain_data.csv', 'w', newline='') as file:
+#     writer = csv.writer(file)
+#     for comm in l.nestedCommunities:
+#         writer.writerow(comm)
+
+# #storing the centroids so we can work with them
+# with open('coordinate_data.csv', 'w', newline = '') as file:
+#     writer = csv.writer(file)
+#     writer.writerow(["Tract", "Latitude", "Longitude"])
+#     for tract in centroidDictionary.keys():
+#         row = [tract, centroidDictionary[tract][0], centroidDictionary[tract][1]]
+#         writer.writerow(row)
 
 ''' this is a bunch of business we don't need right now
 def randomColors(n):
@@ -95,6 +118,6 @@ nx.draw(graph1, node_color=node_colors)
 #plt.show()
 plt.savefig("/home/gordong/Desktop/louvain_1.3.svg")
 '''
-end_time = datetime.datetime.now()
-execution_time = end_time - start_time
-print(f"Execution time in seconds: {execution_time.total_seconds():.4f} seconds")
+# end_time = datetime.datetime.now()
+# execution_time = end_time - start_time
+# print(f"Execution time in seconds: {execution_time.total_seconds():.4f} seconds")
