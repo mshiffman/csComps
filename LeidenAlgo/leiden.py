@@ -4,8 +4,6 @@ import networkx as nx
 import random
 from collections import deque
 import matplotlib.pyplot as plt
-import igraph as ig
-import leidenalg as lg
 import datetime
 
 
