@@ -23,6 +23,10 @@ weightsDictionary = {}
 coordsDictionary = {}
 graph1 = nx.Graph()
 graph2 = nx.Graph()
+graph3 = nx.Graph()
+
+
+
 
 for i in range(1, len(nodeData)):
     if nodeData.iloc[i,5] == "Hennepin County, MN":
@@ -33,6 +37,7 @@ for i in range(1, len(nodeData)):
         longitude = nodeData.iloc[i,39]
         tractDictionary[geocode] = censusTract
         coordsDictionary[geocode] = (latitude, longitude)
+        graph3.add_node(geocode)
 
 centroid_totals = {}
 for key in coordsDictionary:
@@ -54,6 +59,7 @@ for tract in centroid_totals:
 for i in range(1, len(edgeData)):
     start_geocode = edgeData.iloc[i,0]
     dest_geocode = edgeData.iloc[i,1]
+    graph3.add_edge(start_geocode, dest_geocode)
     if start_geocode in tractDictionary and dest_geocode in tractDictionary:
         start_tract = tractDictionary[start_geocode]
         dest_tract = tractDictionary[dest_geocode]
@@ -71,14 +77,17 @@ for key in weightsDictionary:
     source = key[0]
     dest = key[1]
     graph1.add_edge(source, dest, weight=weightsDictionary[key])
-    graph2.add_edge(source, dest, weight=1/weightsDictionary[key])
+    graph2.add_edge(source, dest, weight=weightsDictionary[key]/1)
     edgeCount += 1
 
 #saving the graph to pkl
 with open('graph.pkl', 'wb') as f:
     pickle.dump(graph1, f)
-with open('graphGN.pkl', 'wb') as f:
+with open('graphLPA.pkl', 'wb') as f:
     pickle.dump(graph2, f)
+with open('graphWLPA.pkl', 'wb') as f:
+    pickle.dump(graph3, f)
+print(len(graph3))
 
 # #run the louvain algorithm on the tract graph
 # l = louvain_fixed.Louvain(graph1)

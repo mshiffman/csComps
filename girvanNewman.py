@@ -2,6 +2,7 @@ from collections import deque
 from heapq import heappop, heappush
 import matplotlib.pyplot as plt
 import networkx as nx
+import time
 
 class GirvanNewman:
     def __init__(self, graph: nx.Graph):
@@ -325,6 +326,19 @@ def main():
     gnG = GirvanNewman(G)
     #unweighted edges
     print("unweighted")
-    print(gnG.girvanNewmanAlgo(False, "numEdges75"))
-if __name__ == "__main__":
+
+    G = nx.Graph()
+    G.add_edges_from([
+        (1, 2, {'weight': 1}),
+        (2, 3, {'weight': 1}),
+        (3, 1, {'weight': 1}),
+        (3, 4, {'weight': 1}),
+        (4, 5, {'weight': 1}),
+        (5, 6, {'weight': 1}),
+        (4, 6, {'weight': 1})
+    ])
+    gnG = GirvanNewman(G)
+    print(gnG.calculateEdgeBetweenness(False))
+    
+if __name__ == main():
     main()
