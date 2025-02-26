@@ -1,3 +1,5 @@
 
 #ignore csv files
 *.csv
+
+graphWPLA.pkl
