@@ -311,7 +311,7 @@ def main():
     
     #Weighted Edges
     print("weighted")
-    print(gnG.girvanNewmanAlgo(True, "numEdges75"))
+    print(gnG.girvanNewmanAlgo(True, "modularity"))
 
     G = nx.Graph()
     G.add_weighted_edges_from([
@@ -325,6 +325,6 @@ def main():
     gnG = GirvanNewman(G)
     #unweighted edges
     print("unweighted")
-    print(gnG.girvanNewmanAlgo(False, "numEdges75"))
+    print(gnG.girvanNewmanAlgo(False, "modularity"))
 if __name__ == "__main__":
     main()
