@@ -15,7 +15,6 @@ print(len(communities))
 print(nx.community.modularity(G, nx.community.label_propagation_communities(G)))
 
 
-
 communities = nx.algorithms.community.label_propagation_communities(G)
 print(len(communities))
 print(nx.community.modularity(G2, nx.community.label_propagation_communities(G2)))
