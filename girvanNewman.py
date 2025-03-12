@@ -1,7 +1,8 @@
-from collections import deque
+from collections import defaultdict, deque
 from heapq import heappop, heappush
 import matplotlib.pyplot as plt
 import networkx as nx
+import time
 
 class GirvanNewman:
     def __init__(self, graph: nx.Graph):
@@ -48,28 +49,43 @@ class GirvanNewman:
         adapted bfs algorithm to dijkstras
         '''
         stack = []
-        parents = {}
-        sigma = {}
+        parents = defaultdict(list)
+        sigma = defaultdict(int)
         distance = {}
-        delta = {}
+        delta = defaultdict(int)
         pQueue = []
+        edgeCount = {}
+        maxDepth = 1
 
         #initialize
+        # for targetNode in self.graph.nodes:
+        #     if targetNode == sourceNode:
+        #         sigma[sourceNode]=1
+        #         distance[targetNode]=0
+        #         heappush(pQueue, (0, sourceNode))
+        #     else:
+        #         sigma[targetNode]=0
+        #         distance[targetNode]=float("inf")
+        #     delta[targetNode]=0
+        #     parents[targetNode]=[]
         for targetNode in self.graph.nodes:
-            if targetNode == sourceNode:
-                sigma[sourceNode]=1
-                distance[targetNode]=0
-                heappush(pQueue, (0, sourceNode))
-            else:
-                sigma[targetNode]=0
-                distance[targetNode]=float("inf")
-            delta[targetNode]=0
-            parents[targetNode]=[]
+            distance[targetNode]=float("inf")
+            edgeCount[targetNode]=float("inf")
+
+
+        sigma[sourceNode] = 1
+        distance[sourceNode] = 0
+        heappush(pQueue, (0, sourceNode))
+        edgeCount[sourceNode] = 0 
 
         while len(pQueue)>0:
                 dist, inBetweenNode = heappop(pQueue)
-
+                
+                if edgeCount[inBetweenNode] >= maxDepth:
+                    continue
+                
                 stack.append(inBetweenNode)
+
                 if dist <= distance[inBetweenNode]:
                     for neighborNode in self.graph.neighbors(inBetweenNode):
 
@@ -80,6 +96,7 @@ class GirvanNewman:
                             heappush(pQueue, (newDist, neighborNode))
                             distance[neighborNode]=newDist 
                             parents[neighborNode]=[inBetweenNode]
+                            edgeCount[neighborNode] = edgeCount[inBetweenNode] + 1
                         if distance[neighborNode]==newDist:
                             sigma[neighborNode]+=sigma[inBetweenNode]
                             if inBetweenNode not in parents[neighborNode]:
@@ -96,6 +113,7 @@ class GirvanNewman:
 
         edgeBetweenness = {}
         for edge in self.graph.edges:
+            edge = tuple(sorted((int(edge[0]), int(edge[1]))))
             edgeBetweenness[edge] = 0
         
         for sourceNode in self.graph.nodes:
@@ -125,6 +143,9 @@ class GirvanNewman:
         '''
         https://medium.com/smucs/community-detection-label-propagation-vs-girvan-newman-part-1-c7f8680062c8#:~:text=Well%2C%20this%20is%20the%20result,of%20modularity%20comes%20into%20play.&text=Essentially%2C%20modularity%20measures%20how%20strong,graph%20into%20separate%20communities%20is.
         '''
+        
+        mapping = {node: int(node) for node in self.graph.nodes()}
+        self.graph = nx.relabel_nodes(self.graph, mapping)
         
         if method == "modularity":
             bestPartition = None
@@ -175,6 +196,7 @@ class GirvanNewman:
                 edgeBetweenness = self.calculateEdgeBetweenness(weight)
                 highestEdge = max(edgeBetweenness, key=edgeBetweenness.get)
                 self.graph.remove_edge(*highestEdge)
+                # print("edges remaining:", len(self.graph.edges))
                 communities = self.getCommunities()
                 if len(dendrogram)==0 or dendrogram[-1]!=communities:
                     dendrogram.append(sorted(communities))
@@ -325,6 +347,6 @@ def main():
     gnG = GirvanNewman(G)
     #unweighted edges
     print("unweighted")
-    print(gnG.girvanNewmanAlgo(False, "modularity"))
+    print(gnG.girvanNewmanAlgo(False, "numEdges75"))
 if __name__ == "__main__":
     main()

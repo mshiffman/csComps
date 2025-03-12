@@ -1,4 +1,5 @@
 # Leiden algorithm implementation, Carleton College Computer Science 2025 Comps
+# Jonathan Merchant
 
 import networkx as nx
 import random
@@ -226,7 +227,10 @@ class Leiden:
         # Refinement node movement step, very similar to fast local movement
         # Everything is the same except for the extra nodes,
         # which get added into the community when analyzing modularity,
-        # and removed directly after
+        # and removed directly after.
+        # Extra nodes are nodes that aren't in the community being 
+        # analyzed, but nodes within said community have an
+        # edge going to the extra node.
 
         if len(communitiesToCheck) == 1:
             return communitiesToCheck
