@@ -1,8 +1,13 @@
+import csv
 import pickle
 import networkx as nx
 
+
 #Conductance eq source: https://www.youtube.com/watch?v=Q_kJGm1xf6s
 def graphAvgConductance(graph, communities):
+   '''
+   https://www.sciencedirect.com/science/article/pii/S0370157316302964#s000015
+   '''
    totalConductance = 0
    commCount = 0
    for community in communities:
@@ -31,6 +36,9 @@ def graphAvgConductance(graph, communities):
 
 #density eq source https://www.youtube.com/watch?v=Q_kJGm1xf6s
 def graphAvgDensity(graph, communities):
+   '''
+   https://www.sciencedirect.com/topics/computer-science/network-density
+   '''
    totalDensity = 0
    commCount = 0
    for community in communities:
@@ -112,9 +120,67 @@ def getCommunity(node, communities):
             return i
 
 
-# #to open pickle file:
-# fileName = 'graph1.pkl'
-# with open(fileName, 'rb') as f:
-#    graph1 = pickle.load(f)
+communities1 = []
+with open('WLPA5.csv', 'r') as file:
+    reader = csv.reader(file)
+    for community in reader:
+      communities1.append(community)
 
-# graphAvgDensity(graph1, communities=[])
+
+#to open pickle file:
+fileName = 'graphLPA.pkl'
+with open(fileName, 'rb') as f:
+   G1 = pickle.load(f)
+
+
+communities2 = []
+with open('LouvainData/louvain_communities_1_3.csv', 'r') as file:
+    reader = csv.reader(file)
+    for community in reader:
+      communities2.append(community)
+
+
+#to open pickle file:
+fileName = 'graph.pkl'
+with open(fileName, 'rb') as f:
+   G2 = pickle.load(f)
+   
+communities3 = []
+with open('leidenData/leiden_communities_1_3.csv', 'r') as file:
+    reader = csv.reader(file)
+    for community in reader:
+      communities3.append(community)
+
+
+
+communities1 = [[int(node) for node in community] for community in communities1]
+mapping = {node: int(node) for node in G1.nodes()}
+G1 = nx.relabel_nodes(G1, mapping)
+
+communities2 = [[int(node) for node in community] for community in communities2]
+communities3 = [[int(node) for node in community] for community in communities3]
+mapping = {node: int(node) for node in G2.nodes()}
+G2 = nx.relabel_nodes(G2, mapping)
+
+
+
+
+print("WLPA mod:", modularity(G1, communities1))
+
+print("Louvain mod:",modularity(G2, communities2))
+
+print("Leiden mod:",modularity(G2, communities3))
+
+
+print("WLPA den:", graphAvgDensity(G1, communities1))
+
+print("Louvain den:",graphAvgDensity(G2, communities2))
+
+print("Leiden den:",graphAvgDensity(G2, communities3))
+
+
+print("WLPA con:", graphAvgConductance(G1, communities1))
+
+print("Louvain con:",graphAvgConductance(G2, communities2))
+
+print("Leiden con:",graphAvgConductance(G2, communities3))
