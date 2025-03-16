@@ -70,7 +70,7 @@ nav ul li {
 
 nav ul li a {
     text-decoration: none;
-    color: white;
+    color: black;
     padding: 10px 15px;
     display: block; /* Make the links clickable over the whole area */
 }
@@ -82,7 +82,8 @@ nav ul li a:hover {
 }
 
 .centered-image-box {
-    justify-content: center;
+    text-align: center;
+    margin: 30px;
 }
 
 .text-box {
@@ -93,4 +94,20 @@ nav ul li a:hover {
     text-align: left; /* Centers the text */
     font-size: 18px; /* Adjust text size */
     margin: 20px auto; /* Centers the box horizontally */
+}
+
+.profiles-container {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    max-width: 100%;
+    gap: 20px;
+}
+
+.vertical-container {  /* Set a background color */
+    width: 20%;
+    padding: 20px;                /* Add padding inside the divs */  /* Add a border around the divs */
+    flex: 1;                      /* Makes each box take equal width */
+    text-align: center;      
 }

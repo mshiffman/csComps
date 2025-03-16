@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Horizontal Menu</title>
+   <link rel="stylesheet" href="css/styles.css"> 
+</head>
+
+<body>
+   <header class="banner">
+      <img src="img/logo_white.svg" alt="Logo" class="logo">
+      <div class="banner-content">
+         <h1 class="title">Optimizing Public Transportation Networks with Community Detection Algorithms</h1>
+         <h3>Computer Science Integrative Exercise</h3>
+         <h3>Graham Gordon, Jonathan Merchant, Mika Shiffman, adv. Layla Oesper</h3>
+      </div>
+   </header>
+<div>
+   <nav>
+      <ul>
+         <li><a href="home.html">Home</a></li>
+         <li><a href="about.html">About Us</a></li>
+         <li><a href="paper.html">Paper</a></li>
+         <li><a href="posters.html">Posters</a></li>
+      </ul>
+   </nav>
+</div>
+<div class = "centered-image-box">
+<img src="img/communitydetection_clipart.png", width="30%">
+</div>
+<div class="text-box">
+   <h2 color="black">Abstract</h2>
+   In graph theory and network science, the problem of community detection is one of importance in many fields--from social media to protein structures to cybersecurity. Solutions to this problem allow us to draw deeper understanding of the nature of networks, especially large and dense ones. While there exists previous research applying these types of algorithms to population or traffic data to draw conclusions about it, it is a minimally answered question. We sought out to explore the differences between how our implementations of five different community detection algorithms functioned on commuter data in Hennepin County, Minnesota, both in terms of the theory behind them and the results that they produced. These results were in the form of partitions of the county's census tracts, which we proposed as starting points for areas that may be in need of increased access to public transit, where rail lines and networks could potentially be constructed. Using visual representations of these communities, we analyzed which ones were most suited for this application across all of the algorithms that we implemented. 
+</div>
+<div class="text-box">
+   <h2>Data</h2>
+      Our data comes from the <a href="https://lehd.ces.census.gov/data/">
+      U.S. Census Longitudinal Employer-Household Dynamics resource</a>, 
+      specifically the LEHD Origin-Destination Employment Statistics database, version 8.
+      This database contains datasets from all 50 states, with various possible filters.
+      Our project uses the sheet including all entries entirely contained within Minnesota in the year 2022, 
+      entitled 'mn_od_main_JT00_2022.csv'. From this dataset, we created a graph mapping the commuting needs of all census tracts 
+      in Hennepin County, MN.
+</div>
+</body>
