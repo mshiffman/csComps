@@ -5,7 +5,18 @@ from datetime import datetime
 
 class Louvain:
 
+
     def __init__(self, graph, resolution = 1):
+        """
+        Creates a new Louvain object.
+
+        Args:
+            graph: the NX graph to run the algorithm on
+            resolution: the resolution parameter gamma, default value 1
+
+        Returns:
+            A new Louvain object.
+        """
         self.resolution = resolution
         self.G = graph
         self.originalGraph = graph
@@ -13,6 +24,17 @@ class Louvain:
         self.nestedCommunities = []
 
     def run(self):
+        """
+        Creates a new Louvain object.
+
+        Args:
+            None
+
+        Returns:
+            Nothing
+        """
+
+        #creates a partition of each n
         self.singletonCommunities()
         improved = True
         firstIteration = True
@@ -23,9 +45,7 @@ class Louvain:
             improved = False
             #running phase 1 until modularity reaches a local maxima
             changesMade = True
-            #iterations = 0
-            while changesMade: #and iterations < 1000:
-                #iterations += 1
+            while changesMade:
                 changesMade = False
                 for node in self.G.nodes:
                     if self.nodeMovement(node) == True:
@@ -50,20 +70,11 @@ class Louvain:
                     temp.append(tempInner)
                 self.nestedCommunities = temp
 
+            #Adding nodes for each community to the new graph
             for i in range(len(self.communities)):
                 newGraph.add_node(i)
-            '''
-            #creating edges, with weight based on totals
-            for i in self.G.nodes:
-                for j in self.G.nodes:        
-                    if self.G.has_edge(i,j):
-                        comm_iIndex = self.findCommunity(i)
-                        comm_jIndex = self.findCommunity(j)
-                        if newGraph.has_edge(comm_iIndex,comm_jIndex):
-                            newGraph[comm_iIndex][comm_jIndex]['weight'] += self.G[i][j]['weight']
-                        else:
-                            newGraph.add_edge(comm_iIndex,comm_jIndex, weight=self.G[i][j]['weight'])
-            '''
+
+            #Adding the weights for edges in the new graph
             for i, j, weight in self.G.edges(data="weight"):
                 comm_iIndex = self.findCommunity(i)
                 comm_jIndex = self.findCommunity(j)
@@ -72,10 +83,21 @@ class Louvain:
                 else:
                     newGraph.add_edge(comm_iIndex,comm_jIndex, weight=weight)
             
+            #resetting self.G and self.communities for the new iteration
             self.G = newGraph
             self.singletonCommunities()
-        
+    
+    
     def singletonCommunities(self):
+        """
+        Places each node into its own community. 
+
+        Args:
+            None
+
+        Returns:
+            Nothing
+        """
         self.fixedDegree = { node: (deg - (self.G.get_edge_data(node, node, {}).get("weight", 0))) 
             for node, deg in self.G.degree(weight="weight")}
         self.communities = []
@@ -84,6 +106,16 @@ class Louvain:
             self.communities.append(node_as_list)
 
     def nodeToCommunity(self, node, destNode):
+        """
+        Moves a node to the community of a particular node. 
+
+        Args:
+            node: The node to be moved
+            destNode: The node who's community node will be moved into.
+
+        Returns:
+            Nothing
+        """
         for comm in self.communities:
             if node in comm:
                 comm.remove(node)
@@ -91,6 +123,17 @@ class Louvain:
                 comm.append(node)
     
     def nodeMovement(self, node):
+        """
+        Attempts to move a node to the community among those of its neighbors
+        that will lead to the highest gain in modularity, or keep it as is if no such
+        gain exists. 
+
+        Args:
+            node: the node to be moved.
+
+        Returns:
+            True if the node was moved, False if not.
+        """
         originalCommunity = self.findCommunity(node)
         nodeMoved = False
         curMod = self.modularity()
@@ -113,12 +156,30 @@ class Louvain:
         return nodeMoved
 
     def findCommunity(self, node):
+        """
+        Returns the community of a node.
+
+        Args:
+            node: The node who's community we're looking to find.
+
+        Returns:
+            The index of the community of that node. 
+        """
         for c_index in range(len(self.communities)):
             if node in self.communities[c_index]:
                 return c_index
         print("Error: node",node,"is not part of a community.")
 
     def modularity(self):
+        """
+        Returns the modularity of the current graph and partition.
+
+        Args:
+            None
+
+        Returns:
+            A modularity value [-1,1]
+        """
         degree_sum = sum(self.fixedDegree.values())
         m = degree_sum/2
 
@@ -130,37 +191,3 @@ class Louvain:
                 sumCHat = sum(self.fixedDegree[node] for node in community)
                 totalSum += (sumC - self.resolution * ((sumCHat**2)/(2*m)))
         return totalSum / (2 * m)
-
-def main():
-    graph = nx.Graph()
-    graph.add_edge(0,0,weight=14)
-    graph.add_edge(1,1,weight=16)
-    graph.add_edge(2,2,weight=2)
-    graph.add_edge(3,3,weight=4)
-    graph.add_edge(0,1,weight=1)
-    graph.add_edge(0,2,weight=1)
-    graph.add_edge(2,3,weight=1)
-    graph.add_edge(0,3,weight=4)
-    graph.add_edge(1,2,weight=3)
-    for i in range(10):
-        graph = nx.erdos_renyi_graph(100, 0.1, seed=53)
-        for u, v in graph.edges():
-            graph[u][v]['weight'] = random.randint(1,20)
-
-        start_time = datetime.now()
-        l = Louvain(graph, 1)
-        l.run()
-        print(l.nestedCommunities)
-
-        end_time = datetime.now()
-        execution_time = end_time - start_time
-        print(f"Execution time in seconds: {execution_time.total_seconds():.4f} seconds")
-    
-
-
-                                                             
-    
-    
-
-if __name__ == "__main__":
-    main()

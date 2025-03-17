@@ -5,15 +5,9 @@ import random
 import csv
 import pickle
 
-#must be in this order i think
-# import matplotlib
-# matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
-import datetime
 
-start_time = datetime.datetime.now()
-
-#constructing a dictionary that leads each geocode to its census tract
+# setting up all the dictionaries we'll need
 node_data_file = "mn_xwalk.csv"
 edge_data_file = "mn_od_main_JT00_2022.csv"
 nodeData = pd.read_csv(node_data_file)
@@ -24,9 +18,9 @@ coordsDictionary = {}
 graph1 = nx.Graph()
 graph2 = nx.Graph()
 
+# creating a dictionary tracking the tract and coordinates of each geocode
 for i in range(1, len(nodeData)):
     if nodeData.iloc[i,5] == "Hennepin County, MN":
-    #if nodeData.iloc[i,15] == "Brooklyn Center city, MN":
         geocode = nodeData.iloc[i,0]
         censusTract = nodeData.iloc[i,6]
         latitude = nodeData.iloc[i, 38] 
@@ -34,6 +28,8 @@ for i in range(1, len(nodeData)):
         tractDictionary[geocode] = censusTract
         coordsDictionary[geocode] = (latitude, longitude)
 
+# Finding the population centroids of each tract, through averaging out the values
+# of all geocodes in the tract
 centroid_totals = {}
 for key in coordsDictionary:
     tract = tractDictionary[key]
@@ -46,11 +42,13 @@ for key in coordsDictionary:
 
 centroidDictionary = {}
 for tract in centroid_totals:
+    # storing the position of each node for eventual graphics
     centroidDictionary[tract] = (centroid_totals[tract][0]/centroid_totals[tract][2], 
                                  centroid_totals[tract][1]/centroid_totals[tract][2])
     graph1.add_node(tract, children = [], pos=(centroidDictionary[tract][0], centroidDictionary[tract][1]), color=None)
     graph2.add_node(tract, children = [], pos=(centroidDictionary[tract][0], centroidDictionary[tract][1]), color=None)
 
+#using the geocode and tract data combined to weight edges
 for i in range(1, len(edgeData)):
     start_geocode = edgeData.iloc[i,0]
     dest_geocode = edgeData.iloc[i,1]
@@ -63,9 +61,6 @@ for i in range(1, len(edgeData)):
                 weightsDictionary[key] = 1
             else:
                 weightsDictionary[key] += 1
-
-print("created weight dictionary")
-
 edgeCount = 0
 for key in weightsDictionary:
     source = key[0]
@@ -74,50 +69,16 @@ for key in weightsDictionary:
     graph2.add_edge(source, dest, weight=1/weightsDictionary[key])
     edgeCount += 1
 
-#saving the graph to pkl
+# #saving the graph to pkl
 with open('graph.pkl', 'wb') as f:
     pickle.dump(graph1, f)
 with open('graphGN.pkl', 'wb') as f:
     pickle.dump(graph2, f)
 
-# #run the louvain algorithm on the tract graph
-# l = louvain_fixed.Louvain(graph1)
-# l.run()
-
-# #creating a csv storing communities
-# with open('louvain_data.csv', 'w', newline='') as file:
-#     writer = csv.writer(file)
-#     for comm in l.nestedCommunities:
-#         writer.writerow(comm)
-
-# #storing the centroids so we can work with them
-# with open('coordinate_data.csv', 'w', newline = '') as file:
-#     writer = csv.writer(file)
-#     writer.writerow(["Tract", "Latitude", "Longitude"])
-#     for tract in centroidDictionary.keys():
-#         row = [tract, centroidDictionary[tract][0], centroidDictionary[tract][1]]
-#         writer.writerow(row)
-
-''' this is a bunch of business we don't need right now
-def randomColors(n):
-    return [(random.random(), random.random(), random.random()) for _ in range(n)]
-
-#assigning the colors
-colors = randomColors(len(l.nestedCommunities))
-count = 0
-for comm in l.nestedCommunities:
-    currentColor = colors[count]
-    count += 1
-    for node in comm:
-        nx.set_node_attributes(l.G, {node: {"color": currentColor}})
-
-node_colors = [l.G.nodes[n]["color"] for n in l.G.nodes]
-    
-plt.figure(figsize=(6, 6))
-nx.draw(graph1, node_color=node_colors)
-#plt.show()
-plt.savefig("/home/gordong/Desktop/louvain_1.3.svg")
-'''
-# end_time = datetime.datetime.now()
-# execution_time = end_time - start_time
-# print(f"Execution time in seconds: {execution_time.total_seconds():.4f} seconds")
+#storing the centroids so we can work with them
+with open('coordinate_data.csv', 'w', newline = '') as file:
+    writer = csv.writer(file)
+    writer.writerow(["Tract", "Latitude", "Longitude"])
+    for tract in centroidDictionary.keys():
+        row = [tract, centroidDictionary[tract][0], centroidDictionary[tract][1]]
+        writer.writerow(row)
