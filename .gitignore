@@ -1,5 +1,6 @@
 
 #ignore csv files
-*.csv
+mn_od_main_JT00_2022.csv
+mn_xwalk.csv
 
 graphWPLA.pkl
