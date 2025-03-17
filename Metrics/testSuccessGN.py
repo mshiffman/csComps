@@ -1,4 +1,4 @@
-from testSuccess import *
+from Metrics.testSuccess import *
 
 
 with open("graph.pkl", 'rb') as f:

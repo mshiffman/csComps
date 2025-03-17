@@ -14,6 +14,16 @@ class LPA:
     def bfs(self, sourceNode, maxDepth):
         '''
         BFS code adapted from Brandes
+        
+        Args: 
+            sourceNode: The node to run BFS from
+            maxDepth: how deep to run BFS from every node
+        
+        Returns:
+            stack: the order to calculate EBC
+            parents: the parent nodes of a given node
+            sigma: number of shortest paths from s to t using edge
+            delta: number of shortest paths from s to t
         '''
         stack = []
         parents = {}
@@ -55,6 +65,11 @@ class LPA:
         Uses a graph and returns the edgeBetwenness of the edges in the graph
         Implemented Brandes algorithm for betweenness found at 
         https://www.tandfonline.com/doi/epdf/10.1080/0022250X.2001.9990249?needAccess=true
+        Args: 
+            weight=True if edge weights hsould be considered
+        
+        Returns:
+            EBC calculations for each edge
         '''
 
         edgeBetweenness = {}
@@ -85,10 +100,24 @@ class LPA:
     def calculateLabelWeights(self, edgeB, vertex, labels):
         '''
         helper function to calculate the value of the label
+        
+        Args:
+            edgeB: dictionary of edge betweenness values
+            vertex: given node
+            labels: labels of nearby nodes
+        Returns:
+            weights of labels to connected nodes
         '''
         
-        neighborsByEB = {neighbor: edgeB[tuple(sorted((vertex, neighbor)))] for neighbor in self.graph.neighbors(vertex)}
-        sortedNeighbors = [n for n, _ in sorted(neighborsByEB.items(), key=lambda item: item[1])]
+        neighborsByEB = {}
+        for neighbor in self.graph.neighbors(vertex):
+            key = tuple(sorted((vertex, neighbor)))
+            neighborsByEB[neighbor] = edgeB[key]
+
+        sortedNeighbors = []
+        for neighbor, value in sorted(neighborsByEB.items(), key=lambda item: item[1]):
+            sortedNeighbors.append(neighbor)
+
         
         halfSize = max(1, len(sortedNeighbors) // 2)
         checkNeighbors = sortedNeighbors[:halfSize]

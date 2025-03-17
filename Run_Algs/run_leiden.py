@@ -2,7 +2,7 @@ import pickle
 import networkx
 import csv
 import datetime
-from LeidenAlgo import leiden
+from Algorithms import leiden
 import louvain
 
 # Test 1: 1.1 Res

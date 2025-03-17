@@ -1,6 +1,6 @@
 import pickle
 import networkx as nx
-from testSuccess import *
+from Metrics.testSuccess import *
 
 # with open("graphGN.pkl", 'rb') as f:
 #     G = pickle.load(f)

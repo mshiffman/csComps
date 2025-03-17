@@ -12,6 +12,15 @@ class GirvanNewman:
     def bfs(self, sourceNode):
         '''
         BFS code adapted from Brandes
+        
+        Args: 
+            sourceNode: The node to run BFS from
+        
+        Returns:
+            stack: the order to calculate EBC
+            parents: the parent nodes of a given node
+            sigma: number of shortest paths from s to t using edge
+            delta: number of shortest paths from s to t
         '''
         stack = []
         parents = {}
@@ -47,6 +56,15 @@ class GirvanNewman:
     def dijkstras(self, sourceNode):
         '''
         adapted bfs algorithm to dijkstras
+        
+        Args: 
+            sourceNode: The node to run Dijkstra's from
+        
+        Returns:
+            stack: the order to calculate EBC
+            parents: the parent nodes of a given node
+            sigma: number of shortest paths from s to t using edge
+            delta: number of shortest paths from s to t
         '''
         stack = []
         parents = defaultdict(list)
@@ -57,16 +75,6 @@ class GirvanNewman:
         edgeCount = {}
         maxDepth = 2
         #initialize
-        # for targetNode in self.graph.nodes:
-        #     if targetNode == sourceNode:
-        #         sigma[sourceNode]=1
-        #         distance[targetNode]=0
-        #         heappush(pQueue, (0, sourceNode))
-        #     else:
-        #         sigma[targetNode]=0
-        #         distance[targetNode]=float("inf")
-        #     delta[targetNode]=0
-        #     parents[targetNode]=[]
         for targetNode in self.graph.nodes:
             distance[targetNode]=float("inf")
             edgeCount[targetNode]=float("inf")
@@ -108,6 +116,12 @@ class GirvanNewman:
         Uses a graph and returns the edgeBetwenness of the edges in the graph
         Implemented Brandes algorithm for betweenness found at 
         https://www.tandfonline.com/doi/epdf/10.1080/0022250X.2001.9990249?needAccess=true
+        
+        Args: 
+            weight=True if edge weights hsould be considered
+        
+        Returns:
+            EBC calculations for each edge
         '''
 
         edgeBetweenness = {}
@@ -140,7 +154,11 @@ class GirvanNewman:
 
     def girvanNewmanAlgo(self, weight, method):
         '''
-        https://medium.com/smucs/community-detection-label-propagation-vs-girvan-newman-part-1-c7f8680062c8#:~:text=Well%2C%20this%20is%20the%20result,of%20modularity%20comes%20into%20play.&text=Essentially%2C%20modularity%20measures%20how%20strong,graph%20into%20separate%20communities%20is.
+        Runs GN
+        
+        Args:
+            weight = True if edge weight values should be used
+            method: stopping condition. Only ran with dendrogram case for paper
         '''
         
         mapping = {node: int(node) for node in self.graph.nodes()}
@@ -162,33 +180,6 @@ class GirvanNewman:
                 else:
                     break
             return bestPartition
-        # elif method == "modularityNum":
-        #     bestPartition = None
-        #     bestModularity = float("-inf")
-        #     while len(self.graph.edges)>0:
-        #         edgeBetweenness = self.calculateEdgeBetweenness(weight)
-        #         highestEdge = max(edgeBetweenness, key=edgeBetweenness.get)
-        #         self.graph.remove_edge(*highestEdge)
-
-        #         communities = self.getCommunities()
-        #         curModularity = self.modularity(self.originalGraph,communities)
-        #         if curModularity>bestModularity:
-        #             bestModularity=curModularity
-        #             bestPartition = communities
-        #             if len(communities)>15:
-        #                 break
-        #         else:
-        #             if len(communities)>7:
-        #                 break
-            # return bestPartition
-        elif method == "numEdges75":
-            totalEdges = len(self.graph.edges())
-            while len(self.graph.edges)>totalEdges*.25:
-                edgeBetweenness = self.calculateEdgeBetweenness(weight)
-                highestEdge = max(edgeBetweenness, key=edgeBetweenness.get)
-                self.graph.remove_edge(*highestEdge)
-                communities = self.getCommunities()
-            return communities
         elif method == "dendrogram":
             dendrogram = []
             while len(self.graph.edges)>0:
@@ -205,7 +196,7 @@ class GirvanNewman:
                 
     def getCommunities(self):
         '''
-        Get the communities in a graph
+        Returns: the communities in a graph
         '''
         visited = {}
         communities = []
@@ -224,6 +215,14 @@ class GirvanNewman:
     def connectedBFS(self, node, visited):
         '''
         Use BFS to find all connected nodes
+        
+        Args: 
+            node: source node to find connected components from
+            visited: dictionary of if we have visited a node yet
+        
+        Returns:
+            community of nodes from source node
+            visted dictionary
         '''
         queue = deque([node])
         curCommunity = [node]
@@ -239,6 +238,14 @@ class GirvanNewman:
         return curCommunity, visited
 
     def modularity(self, graph: nx.Graph, communities: list) -> float:
+        '''
+        Args:
+            graph: input graph
+            communities: list of lists (representing community structure)
+            
+        Returns:
+            modularity score for graph with that community divisions
+        '''
         self.setFixedDegrees(graph)
         # Calculates modularity of the graph
 
@@ -255,7 +262,9 @@ class GirvanNewman:
         return totalSum / (2 * m)
 
     def setFixedDegrees(self, graph: nx.Graph) -> None:
-        #Used to calculate modularity for current graph & community division
+        '''
+        helper function: Used to calculate modularity for current graph & community division
+        '''
         self.fixedDegree = {
             node: deg - (graph.get_edge_data(node, node, {}).get("weight", 0)) 
             for node, deg in graph.degree(weight="weight")
