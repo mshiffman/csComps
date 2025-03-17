@@ -18,5 +18,3 @@ Results contains the community divisions produced as well as the maps of those c
 Run Algs contains the code to run the algorithms on the dataset, and saves the results into either csv or pickle format. 
 
 
-Website contains the files used to construct our website.
-
