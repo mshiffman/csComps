@@ -4,18 +4,35 @@
 import networkx as nx
 import random
 from collections import deque
-import datetime
 
 
 class Leiden:
 
     def __init__(self, graph: nx.Graph, resolution: float):
+        """
+        Creates a new Leiden object.
+
+        Args:
+            graph: the NX graph to run the algorithm on
+            resolution: the resolution parameter gamma, default value 1
+
+        Returns:
+            A new Leiden object.
+        """
 
         self.graph = graph
         self.resolution = resolution
 
     def setRefinedCommunities(self, community: list) -> list:
-        # Sets communities during refinement step
+        """
+        Sets communities during refinement step
+        
+        Args:
+            community: Community to be separated into individual communities
+        
+        Returns:
+            List of communities
+        """
 
         outputCommunities = []
         for node in community:
@@ -24,7 +41,15 @@ class Leiden:
         return outputCommunities
 
     def setInitialCommunities(self, graph: nx.Graph) -> list:
-        # Sets communities during fast local node movement step
+        """
+        Sets communities during fast local node movement step
+        
+        Args:
+            graph: Graph to have nodes separated into individual communities
+        
+        Returns:
+            List of communities
+        """
 
         allNodes = list(graph.nodes)
         outputCommunities = []
@@ -34,7 +59,15 @@ class Leiden:
         return outputCommunities
 
     def setFixedDegrees(self, graph: nx.Graph) -> None:
-        # Used to calculate modularity for current graph & community division
+        """
+        Used to calculate modularity for current graph & community division
+        
+        Args:
+            graph: Current graph to get edge data from
+        
+        Returns:
+            Nothing
+        """
 
         self.fixedDegree = {
             node: deg - (graph.get_edge_data(node, node, {}).get("weight", 0))
@@ -42,7 +75,16 @@ class Leiden:
             }
 
     def moveNodesFast(self, graph: nx.Graph, communities: list) -> list | nx.Graph | bool:
-        # Fast local node movement step of Leiden algorithm
+        """
+        Fast local node movement step of Leiden algorithm
+        
+        Args:
+            graph: Current graph to calculate fast local movement step
+            communities: Current division of communities
+        
+        Returns:
+            New division of communities and current graph
+        """
 
         nodeMoved = False
 
@@ -110,7 +152,17 @@ class Leiden:
         return communities, graph, nodeMoved
 
     def refineCommunities(self, communities, graph: nx.Graph) -> list | nx.Graph:
-        # Community Refinement step of Leiden algorithm
+        """
+        Community Refinement step of Leiden algorithm
+        
+        Args:
+            graph: Current graph to calculate refinement step
+            communities: Current division of communities
+        
+        Returns:
+            New division of communities and current graph
+        """
+
         refinedCommunities = []
         for community in communities:
             extraNodes = []
@@ -145,7 +197,17 @@ class Leiden:
         return refinedCommunities, graph
 
     def agglomerateCommunities(self, refinedCommunities: list, graph: nx.Graph, fastMoveCommunities: list) -> list | nx.Graph:
-        # Agglomeration step of Leiden algorithm
+        """
+        Agglomeration step of Leiden algorithm
+        
+        Args:
+            graph: Current graph to calculate agglomeration step
+            refinedCommunities: Division of communities from refinement step
+            fastMoveCommunities: Division of communities from fast local movement step
+        
+        Returns:
+            New division of communities and agglomerated graph
+        """
 
         # Creates new agglomerated graph
         aggGraph = nx.Graph()
@@ -224,7 +286,20 @@ class Leiden:
         return newCommunities, aggGraph
 
     def refineNodeMovement(self, graph: nx.Graph, communitiesToCheck: list, extraNodes: list) -> list:
-        # Refinement node movement step, very similar to fast local movement
+        """
+        Refinement node movement step
+        
+        Args:
+            graph: Current graph to calculate refinement step
+            communitiesToCheck: Communities to evaluate using refinement step
+            extraNodes: Nodes that aren't present in the community but have an edge
+                        from a node in community to these extra nodes
+        
+        Returns:
+            New division of communities
+        """
+
+        # Similar to fast local movement
         # Everything is the same except for the extra nodes,
         # which get added into the community when analyzing modularity,
         # and removed directly after.
@@ -280,7 +355,16 @@ class Leiden:
         return communitiesToCheck
 
     def modularity(self, graph: nx.Graph, communities: list) -> float:
-        # Calculates modularity of the graph
+        """
+        Calculates modularity of the graph
+        
+        Args:
+            graph: Current graph to calculate modularity
+            communities: Current division of communities
+        
+        Returns:
+            Float representing modularity of current graph/community division
+        """
 
         degree_sum = sum(self.fixedDegree.values())
         m = degree_sum/2
@@ -296,7 +380,16 @@ class Leiden:
         return totalSum / (2 * m)
 
     def setRandQueue(self, inputCommunities) -> deque:
-        # Sets the random queue for local node movement order
+        """
+        Sets the random queue for local node movement order
+        
+        Args:
+            inputCommunities: Communities to generate random queue from
+        
+        Returns:
+            Deque representing random queue
+        """
+
         randQueue = deque()
         seen = set()
 
@@ -311,7 +404,16 @@ class Leiden:
         return randQueue
 
     def removeNodefromCommunities(self, node, communities: list) -> list:
-        # Removes node from community
+        """
+        Removes node from community
+        
+        Args:
+            node: Node to remove
+            communities: Current division of communities
+        
+        Returns:
+            New division of communities
+        """
 
         for checkCommunity in communities:
             if node in checkCommunity:
@@ -319,7 +421,15 @@ class Leiden:
         return communities
 
     def removeEmptyCommunities(self, communities: list) -> list:
-        # If any community is empty, delete community
+        """
+        Removes empty communities
+        
+        Args:
+            communities: Current division of communities
+        
+        Returns:
+            New division of communities
+        """
 
         for community in communities:
             if not community:
@@ -327,7 +437,16 @@ class Leiden:
         return communities
 
     def removeExtraCommunities(self, extraCommunities: list, communities: list) -> list | list:
-        # Removes extra communities in refinement step
+        """
+        Removes extra communities in refinement step
+        
+        Args:
+            extraCommunities: Extra communities that must be removed
+            communities: Current division of communities
+        
+        Returns:
+            Extra communities that were removed and a new division of communities
+        """
 
         if not extraCommunities:
             return extraCommunities, communities
@@ -338,7 +457,17 @@ class Leiden:
         return extraNodes, communities
 
     def addNodeToCommunity(self, node, inputCommunity: list, communities: list) -> list:
-        # Adds node to a community
+        """
+        Adds node to a community
+        
+        Args:
+            node: Node to add to community
+            InputCommunity: Community to add node to
+            communities: Current division of communities
+        
+        Returns:
+            New division of communities
+        """
 
         for checkCommunity in communities:
             if checkCommunity == inputCommunity:
@@ -348,7 +477,19 @@ class Leiden:
         return communities
 
     def getChangedNeighbors(self, node, community: list, curr_Queue, graph: nx.Graph, communities) -> list:
-        # Gets neighbors not in new community of node to add to back of queue
+        """
+        Gets neighbors not in new community of node to add to back of queue
+        
+        Args:
+            node: Node to find changed neighbors of
+            community: Community of node
+            curr_Queue: Current random queue
+            graph: Current graph
+            communities: Current division of communities
+        
+        Returns:
+            New division of communities
+        """
 
         neighborsToChange = []
         nodeNeighbors = nx.neighbors(graph, node)
@@ -363,7 +504,16 @@ class Leiden:
         return neighborsToChange
 
     def findCommunity(self, node, communities: list) -> int:
-        # Gets the index of a community of a specific node
+        """
+        Gets the index of a community of a specific node
+        
+        Args:
+            node: Node to find
+            communities: Current division of communities
+        
+        Returns:
+            Int representing index of community holding specific node
+        """
 
         for community_index in range(0, len(communities)):
             if node in communities[community_index]:
@@ -371,7 +521,15 @@ class Leiden:
         return None
 
     def createNode(self, community: list) -> tuple:
-        # Creates a new node to add to a graph/community
+        """
+        Creates a new node to add to a graph/community
+        
+        Args:
+            community: community that will be made into a tuple representing a node
+        
+        Returns:
+            Tuple representing new node
+        """
 
         if any(type(i) is tuple for i in community):
             nodeList = [i for tup in community for i in tup]
@@ -381,8 +539,15 @@ class Leiden:
         return newNode
 
     def unravelCommunities(self, communities: list) -> list:
-        # Unravels communities of tuples (list of list of tuples)
-        # into just a list of list of values
+        """
+        Unravels communities of tuples (list of list of tuples) into just a list of list of values
+        
+        Args:
+            communities: current division of communities
+        
+        Returns:
+            Division of communities after unraveling tuples
+        """
 
         unraveledCommunities = []
         for community in communities:
@@ -396,7 +561,15 @@ class Leiden:
         return unraveledCommunities
 
     def runLeiden(self) -> list:
-        # Runs leiden in correct implementation order
+        """
+        Runs Leiden in correct implementation order
+        
+        Args:
+            None
+        
+        Returns:
+            Division of communities after running Leiden
+        """
 
         # Sets to inputted graph, finds initial communities
         newGraph = self.graph
@@ -459,33 +632,3 @@ class Leiden:
         else:
             finalCommunities = self.unravelCommunities(localmovementCommunities)
             return finalCommunities
-
-
-def creategraph() -> nx.Graph:
-    # Function used to test Leiden using NetworkX generated Erdos Renyi graph
-
-    # Set the random seed for reproducibility
-    random.seed(40)
-    G = nx.erdos_renyi_graph(100, 0.1, seed=40)
-    for u, v in G.edges():
-        G[u][v]['weight'] = random.uniform(1, 5)
-    print("NX graph made")
-
-    return G
-
-
-def main():
-
-    start_time = datetime.datetime.now()
-    Graph = creategraph()
-    leidenGraph = Leiden(Graph, 1)
-    communities = leidenGraph.runLeiden()
-    end_time = datetime.datetime.now()
-    execution_time = end_time - start_time
-
-    print(f"{len(communities)} final communities: {communities}")
-    print(f"Execution time in seconds: {execution_time.total_seconds():.4f} seconds")
-
-
-if __name__ == "__main__":
-    main()
