@@ -159,6 +159,8 @@ class GirvanNewman:
         Args:
             weight = True if edge weight values should be used
             method: stopping condition. Only ran with dendrogram case for paper
+        Returns:
+            community divisions
         '''
         
         mapping = {node: int(node) for node in self.graph.nodes()}
@@ -269,54 +271,4 @@ class GirvanNewman:
             node: deg - (graph.get_edge_data(node, node, {}).get("weight", 0)) 
             for node, deg in graph.degree(weight="weight")
             }
-
-    # def modularity(self, graph, communities):
-    #     '''
-    #     m = number of edges (unweighted), weighted = 1/2*sum(all weights for nodes i,j)
-    #     Aij = edge weight for the edge between i and j
-    #     Ki = weighted degree of i
-    #     Kj = weighted degree of j
-    #     delta 1 if in same community, 0 if not
-    #     mod = 1/2m * sum(Aij- ((ki*kj)/2m)* delta)
-    #     '''
-
-    #     m = graph.size(weight="weight")
-    #     summation = 0.0
-    #     for i in graph.nodes():
-    #         for j in graph.nodes():
-    #             if graph.has_edge(i,j):
-    #                 Aij = graph[i][j].get("weight", 1)
-    #             else:
-    #                 Aij = 0
-    #             Ki = self.getDegree(i, graph)
-    #             Kj = self.getDegree(j, graph)
-
-    #             com1 = self.getCommunity(i, communities)
-    #             com2 = self.getCommunity(j, communities)
-    #             if com1 == com2:
-    #                 delta = 1
-    #             else:
-    #                 delta = 0
-    #             summation += (Aij - ((Ki*Kj)/(2*m)))* delta
-        
-    #     modScore = 1/ (2*m) * summation
-    #     return modScore 
-
-    # def getDegree(self, node, graph):
-    #     '''
-    #     returns the degree of a node
-    #     '''
-    #     degree = 0
-    #     for neighbor in graph.neighbors(node):
-    #         edge = graph[node][neighbor].get("weight", 1)
-    #         degree +=edge
-    #     return degree  
-
-    # def getCommunity(self, node, communities):
-    #     '''
-    #     returns the index of the community a node belongs to
-    #     '''
-    #     for i in range(len(communities)):
-    #         if node in communities[i]:
-    #             return i
 

@@ -131,7 +131,13 @@ class LPA:
         return labelWeights
     
     
-    def getCommunitySizes(self, labels, community):
+    def getCommunitySizes(self,community):
+        '''
+        Args: 
+            community: name of community you want to find the size for
+        Returns:
+            Size of the community
+        '''
         communitySize = 0
         for node, weight in self.communityWeights[community].items():
             communitySize+=1
@@ -141,6 +147,15 @@ class LPA:
     def moveNode(self, labels, vertex, labelWeights, reassignList, changes):
         '''
         helper function to move node into correct community for modified version
+        Args: 
+            labels: dictionary of labels
+            vertex: node to move
+            labelWeights: dictionary of labels and weights
+            reassignList: nodes to reassign
+        Returns:
+            changes: number of changes made
+            labels: dictionary of node labels
+            reassignList: nodes to reassign
         '''
         oldLabel = labels[vertex]
         
@@ -196,6 +211,12 @@ class LPA:
     def WLPA_Mod(self, maxDepth, maxIter, targetComms):
         '''
         modifed version of wlpa-leb
+        Args:
+            maxDepth: depth for EBC calculations
+            maxIter: iteration limit
+            targetComms: goal number of communities
+        Returns:
+            Community divisions
         '''
         labels = {}
         self.allLabelWeights = {}
@@ -261,6 +282,11 @@ class LPA:
     def WLPA(self, maxDepth, maxIter):
         '''
         code for wlpa-leb
+        Args:
+            maxDepth: depth for EBC
+            maxIter: maximum number of iterations
+        Returns:
+            community divisions
         '''
         labels={}
         commCount={}
@@ -328,6 +354,10 @@ class LPA:
     def getCommunities(self, labels):
         '''
         helper function to return communities
+        Args:
+            labels: dictionary of node labels
+        Returns:
+            communities in graph
         '''
         communities = {}
         
@@ -341,6 +371,8 @@ class LPA:
     def LPA(self):
         '''
         LPA algorithm
+        Returns:
+            community divisions
         '''
         colors = self.colorNodes()
         
@@ -367,6 +399,14 @@ class LPA:
     def updateLabel(self, node, changes, labels):
         '''
         Updating label helper function for LPA
+        
+        Args:
+            node: node to update label of
+            changes: number of changes
+            labels: dictionary of labels
+        Returns:
+            changes: number of changes
+            labels: dictionary of labels
         '''
         neighborLabels = {}
 
@@ -390,6 +430,9 @@ class LPA:
     def colorNodes(self):
         '''
         Welsh-Powell graph coloring algorithm
+        
+        Returns:
+            graph coloring divisions
         '''
         nodes = list(self.graph.nodes())
         colors = {}
@@ -420,36 +463,3 @@ class LPA:
             nodes = uncolored
             color +=1
         return colors
-
-
-
-# def main():
-#     G = nx.Graph()
-#     G.add_edges_from([(1, 2), (2, 3), (3, 4), (4, 1), (1, 3)])
-#     graph = LPA(G)
-
-#     colors = graph.colorNodes()
-
-#     print("Graph coloring result:")
-#     for color, nodes in colors.items():
-#         print(f"Color {color}: {nodes}")
-        
-# if __name__ == "__main__":
-#     main()
-            
-# G = nx.Graph()
-# G.add_edges_from([
-#     (1, 2, {'weight': 1.5}),
-#     (2, 3, {'weight': 1.8}),
-#     (3, 1, {'weight': 1.2}),
-#     (3, 4, {'weight': 1.3}),
-#     (4, 5, {'weight': 1.4}),
-#     (5, 6, {'weight': 1.5}),
-#     (4, 6, {'weight': 1.6})
-# ])
-
-# # Run the WLBA-LEB algorithm
-# graphW = LPA(G)
-
-# communities = graphW.WLPA_Mod(1, 1000, 3)
-# print("Communities:", communities)
