@@ -1,4 +1,4 @@
-from WLPA import LPA
+from Algorithms.WLPA import LPA
 import datetime
 import pickle
 import csv
